@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flowtrack/widgets/bottomnavigationbar.dart';
 import 'package:flowtrack/data/services/database_services.dart';
-import 'package:flowtrack/data/migration_helper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await DatabaseService.init(); // Initialize the new database structure
-  await MigrationHelper.migrateOldData(); // Migrate old data if it exists
-  runApp(MyApp());
+  
+  try {
+    await DatabaseService.init();
+    print('Database initialized successfully');
+  } catch (e) {
+    print('Database initialization error: $e');
+    // ยังคงรันแอปต่อไป
+  }
+  
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -15,6 +21,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: Bottom());
+    return MaterialApp(
+      debugShowCheckedModeBanner: false, 
+      home: Bottom()
+    );
   }
 }

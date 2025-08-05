@@ -1,15 +1,16 @@
+// 1. แก้ไข transaction.dart - เปลี่ยน typeId
 import 'package:hive/hive.dart';
 import 'category.dart';
 
 part 'transaction.g.dart';
 
-@HiveType(typeId: 1)
+@HiveType(typeId: 3) // เปลี่ยนเป็น 3 เพื่อไม่ให้ชนกับอะไร
 class Transaction extends HiveObject {
   @HiveField(0)
   late String id;
 
   @HiveField(1)
-  late String categoryId; // เชื่อมกับ Category
+  late String categoryId;
 
   @HiveField(2)
   late double amount;
@@ -21,22 +22,22 @@ class Transaction extends HiveObject {
   late String description;
 
   @HiveField(5)
-  late String type; // 'Income' หรือ 'Expense'
+  late String type;
 
   @HiveField(6)
-  String? note; // บันทึกเพิ่มเติม
+  String? note;
 
   @HiveField(7)
-  String? location; // สถานที่ (optional)
+  String? location;
 
   @HiveField(8)
-  List<String>? tags; // แท็กสำหรับค้นหา
+  List<String>? tags;
 
   @HiveField(9)
-  bool isRecurring; // รายการประจำ
+  bool isRecurring;
 
   @HiveField(10)
-  String? recurringType; // daily, weekly, monthly, yearly
+  String? recurringType;
 
   Transaction({
     required this.id,
@@ -52,22 +53,17 @@ class Transaction extends HiveObject {
     this.recurringType,
   });
 
-  // Helper methods
   bool get isIncome => type == 'Income';
   bool get isExpense => type == 'Expense';
   
-  // Format amount เป็น string
   String get formattedAmount {
     String prefix = isIncome ? '+' : '-';
     return '$prefix\$${amount.toStringAsFixed(2)}';
   }
 
-  // ดึงข้อมูล Category
   Category? getCategory(Box<Category> categoryBox) {
     try {
-      return categoryBox.values.firstWhere(
-        (cat) => cat.id == categoryId,
-      );
+      return categoryBox.values.firstWhere((cat) => cat.id == categoryId);
     } catch (e) {
       return Category(
         id: 'unknown',
@@ -79,7 +75,6 @@ class Transaction extends HiveObject {
     }
   }
 
-  // ค้นหาด้วย tags
   bool matchesTags(List<String> searchTags) {
     if (tags == null || tags!.isEmpty) return false;
     return searchTags.any((tag) => 

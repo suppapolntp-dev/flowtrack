@@ -8,42 +8,35 @@ class DatabaseService {
   static const String _transactionBoxName = 'transactions';
   static const String _categoryBoxName = 'categories';
 
-  // Boxes
   static Box<Transaction>? _transactionBox;
   static Box<Category>? _categoryBox;
 
-  // Getters
   static Box<Transaction> get transactionBox => _transactionBox!;
   static Box<Category> get categoryBox => _categoryBox!;
 
-  // Initialize Database
   static Future<void> init() async {
     await Hive.initFlutter();
     
-    // Register adapters
+    // Register adapters with correct typeIds
     if (!Hive.isAdapterRegistered(0)) {
-      Hive.registerAdapter(CategoryAdapter());
+      Hive.registerAdapter(CategoryAdapter()); // typeId = 0
     }
     if (!Hive.isAdapterRegistered(1)) {
-      Hive.registerAdapter(TransactionAdapter());
+      Hive.registerAdapter(AdddataAdapter()); // typeId = 1 (legacy)
     }
-    // เอา Add_dataAdapter ออกก่อน เนื่องจากยังไม่ได้ใช้งาน
-    // if (!Hive.isAdapterRegistered(2)) {
-    //   Hive.registerAdapter(Add_dataAdapter()); // Legacy adapter
-    // }
+    if (!Hive.isAdapterRegistered(3)) {
+      Hive.registerAdapter(TransactionAdapter()); // typeId = 3 (ใหม่)
+    }
 
     // Open boxes
     _categoryBox = await Hive.openBox<Category>(_categoryBoxName);
     _transactionBox = await Hive.openBox<Transaction>(_transactionBoxName);
 
-    // สร้างหมวดหมู่เริ่มต้น
     await _initializeDefaultCategories();
   }
 
-  // สร้างหมวดหมู่เริ่มต้น (ตามรายการที่มีอยู่)
   static Future<void> _initializeDefaultCategories() async {
     if (categoryBox.isEmpty) {
-      // หมวดหมู่ค่าใช้จ่าย (ตามไอคอนที่มีอยู่)
       final expenseCategories = [
         Category(id: 'food', name: 'Food', iconName: 'Food', colorHex: '#FF6B6B', type: 'Expense'),
         Category(id: 'coffee', name: 'Coffee', iconName: 'Coffee', colorHex: '#8B4513', type: 'Expense'),
@@ -68,16 +61,15 @@ class DatabaseService {
         Category(id: 'education', name: 'Education', iconName: 'Education', colorHex: '#4169E1', type: 'Expense'),
         Category(id: 'bank_fees', name: 'Bank Fees', iconName: 'Bank Fees', colorHex: '#696969', type: 'Expense'),
         Category(id: 'donation', name: 'Donation', iconName: 'Donation', colorHex: '#32CD32', type: 'Expense'),
+        Category(id: 'other_expense', name: 'Other Expense', iconName: 'Giftbox', colorHex: '#999999', type: 'Expense'),
       ];
 
-      // หมวดหมู่รายได้
       final incomeCategories = [
         Category(id: 'salary', name: 'Salary', iconName: 'Giftbox', colorHex: '#2ECC71', type: 'Income'),
         Category(id: 'gift', name: 'Gift', iconName: 'Giftbox', colorHex: '#E74C3C', type: 'Income'),
         Category(id: 'other_income', name: 'Other Income', iconName: 'Giftbox', colorHex: '#1ABC9C', type: 'Income'),
       ];
 
-      // เพิ่มเข้า database
       for (var category in [...expenseCategories, ...incomeCategories]) {
         await categoryBox.add(category);
       }
@@ -85,7 +77,6 @@ class DatabaseService {
   }
 
   // === CATEGORY METHODS ===
-  
   static Future<void> addCategory(Category category) async {
     await categoryBox.add(category);
   }
@@ -116,7 +107,6 @@ class DatabaseService {
   }
 
   // === TRANSACTION METHODS ===
-  
   static Future<void> addTransaction(Transaction transaction) async {
     await transactionBox.add(transaction);
   }
@@ -139,17 +129,14 @@ class DatabaseService {
   }) {
     var transactions = transactionBox.values.toList();
 
-    // Filter by type
     if (type != null) {
       transactions = transactions.where((t) => t.type == type).toList();
     }
 
-    // Filter by category
     if (categoryId != null) {
       transactions = transactions.where((t) => t.categoryId == categoryId).toList();
     }
 
-    // Filter by date range
     if (startDate != null) {
       transactions = transactions.where((t) => t.datetime.isAfter(startDate) || t.datetime.isAtSameMomentAs(startDate)).toList();
     }
@@ -157,10 +144,8 @@ class DatabaseService {
       transactions = transactions.where((t) => t.datetime.isBefore(endDate) || t.datetime.isAtSameMomentAs(endDate)).toList();
     }
 
-    // Sort by date (latest first)
     transactions.sort((a, b) => b.datetime.compareTo(a.datetime));
 
-    // Limit results
     if (limit != null && transactions.length > limit) {
       transactions = transactions.take(limit).toList();
     }
@@ -169,7 +154,6 @@ class DatabaseService {
   }
 
   // === ANALYTICS METHODS ===
-  
   static double getTotalBalance() {
     final transactions = transactionBox.values.toList();
     double total = 0;
@@ -201,7 +185,6 @@ class DatabaseService {
     return transactions.fold(0.0, (sum, t) => sum + t.amount);
   }
 
-  // ข้อมูลสำหรับแผนภูมิ
   static Map<String, double> getCategoryExpenseData({
     DateTime? startDate,
     DateTime? endDate,
@@ -224,7 +207,6 @@ class DatabaseService {
     return categoryData;
   }
 
-  // ปิด database
   static Future<void> close() async {
     await _transactionBox?.close();
     await _categoryBox?.close();
