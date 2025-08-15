@@ -65,7 +65,13 @@ class DatabaseService {
       ];
 
       final incomeCategories = [
-        Category(id: 'salary', name: 'Salary', iconName: 'Giftbox', colorHex: '#2ECC71', type: 'Income'),
+        Category(id: 'salary', name: 'Salary', iconName: 'salary', colorHex: '#2ECC71', type: 'Income'),
+        Category(id: 'commission', name: 'Commission', iconName: 'commission', colorHex: '#2ECC71', type: 'Income'),
+        Category(id: 'freelanceincome', name: 'Freelance Income', iconName: 'freelanceincome', colorHex: '#2ECC71', type: 'Income'),
+        Category(id: 'dividends', name: 'Dividends', iconName: 'dividends', colorHex: '#2ECC71', type: 'Income'),
+        Category(id: 'interest', name: 'Interest', iconName: 'interest', colorHex: '#2ECC71', type: 'Income'),
+        Category(id: 'rentalincome', name: 'Rental Income', iconName: 'rentalincome', colorHex: '#2ECC71', type: 'Income'),
+        Category(id: 'taxrefunds', name: 'Tax Refunds', iconName: 'taxrefunds', colorHex: '#2ECC71', type: 'Income'),
         Category(id: 'gift', name: 'Gift', iconName: 'Giftbox', colorHex: '#E74C3C', type: 'Income'),
         Category(id: 'other_income', name: 'Other Income', iconName: 'Giftbox', colorHex: '#1ABC9C', type: 'Income'),
       ];
