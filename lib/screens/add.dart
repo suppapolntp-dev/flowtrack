@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flowtrack/data/models/add_date.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flowtrack/data/services/database_services.dart';
+import 'package:flowtrack/data/models/transaction.dart';
+import 'package:flowtrack/data/models/category.dart';
 
 class Add_Screen extends StatefulWidget {
   const Add_Screen({super.key});
@@ -10,50 +11,36 @@ class Add_Screen extends StatefulWidget {
 }
 
 class _Add_ScreenState extends State<Add_Screen> {
-  final box = Hive.box<Add_data>('data');
   DateTime date = DateTime.now();
-  String? selctedItem;
-  String? selctedItemi = "Income";
+  Category? selectedCategory;
+  String selectedType = "Expense"; // เริ่มต้นเป็น Expense
   final TextEditingController expalin_C = TextEditingController();
   FocusNode ex = FocusNode();
   final TextEditingController amount_c = TextEditingController();
   FocusNode amount_ = FocusNode();
-  final List<String> _item = [
-    'Food',
-    "Coffee",
-    "Grocery",
-    "Food-delivery",
-    "Gas-pump",
-    "Public Transport",
-    "Rent or Mortgage",
-    "Water Bill",
-    "Electricity Bill",
-    "Internet Bill",
-    "Clothes",
-    "Shoes",
-    "Accessories",
-    "Personal Care Items",
-    "Movie",
-    "Concert",
-    "Hobby",
-    "Travel",
-    "Health-Report",
-    "Doctor VisitsHospital",
-    "Education",
-    "Bank Fees",
-    "Giftbox",
-    "Donation",
-  ];
-  final List<String> _itemei = ['Income', "Expand"];
+
+  List<Category> availableCategories = [];
+  final List<String> _itemei = ['Expense', 'Income'];
+
   @override
   void initState() {
     super.initState();
-    selctedItemi = _itemei.first; // กำหนดให้เลือกตัวแรกเป็นค่าเริ่มต้น
+    _loadCategories();
     ex.addListener(() {
       setState(() {});
     });
     amount_.addListener(() {
       setState(() {});
+    });
+  }
+
+  void _loadCategories() {
+    setState(() {
+      availableCategories = DatabaseService.getCategories(type: selectedType);
+      // เลือกหมวดหมู่แรกเป็นค่าเริ่มต้น
+      if (availableCategories.isNotEmpty) {
+        selectedCategory = availableCategories.first;
+      }
     });
   }
 
@@ -84,13 +71,13 @@ class _Add_ScreenState extends State<Add_Screen> {
       child: Column(
         children: [
           SizedBox(height: 50),
-          name(),
+          typeSelector(),
+          SizedBox(height: 30),
+          categorySelector(),
           SizedBox(height: 30),
           explain(),
           SizedBox(height: 30),
           amount(),
-          SizedBox(height: 30),
-          How(),
           SizedBox(height: 30),
           date_time(),
           Spacer(),
@@ -101,15 +88,127 @@ class _Add_ScreenState extends State<Add_Screen> {
     );
   }
 
+  Widget typeSelector() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 15),
+      child: Row(
+        children: _itemei
+            .map((item) => Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          selectedType = item;
+                          _loadCategories(); // โหลดหมวดหมู่ใหม่ตามประเภท
+                        });
+                      },
+                      child: Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                              width: 2,
+                              color: selectedType == item
+                                  ? Colors.blue
+                                  : Color(0xffC5C5C5)),
+                          color: selectedType == item
+                              ? Colors.blue.withOpacity(0.1)
+                              : Colors.white,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(item,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: selectedType == item
+                                      ? Colors.blue
+                                      : Colors.black,
+                                  fontWeight: selectedType == item
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                )),
+                            SizedBox(width: 5),
+                            if (selectedType == item)
+                              Icon(Icons.check_circle,
+                                  color: Colors.blue, size: 20)
+                            else
+                              Icon(Icons.radio_button_unchecked,
+                                  color: Colors.grey, size: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ))
+            .toList(),
+      ),
+    );
+  }
+
+  Widget categorySelector() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
+          labelText: 'Category',
+          labelStyle: TextStyle(fontSize: 17, color: Colors.grey.shade500),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(width: 2, color: Color(0xffC5C5C5)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: BorderSide(width: 2, color: Color(0xFFFFC870)),
+          ),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<Category>(
+            value: selectedCategory,
+            onChanged: (Category? newValue) {
+              setState(() {
+                selectedCategory = newValue;
+              });
+            },
+            items: availableCategories.map((Category category) {
+              return DropdownMenuItem<Category>(
+                value: category,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      child: Image.asset(
+                        'images/${category.iconName}.png',
+                        errorBuilder: (context, error, stackTrace) {
+                          return Icon(Icons.category, size: 30);
+                        },
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(category.name, style: TextStyle(fontSize: 16)),
+                  ],
+                ),
+              );
+            }).toList(),
+            hint: Text('Select category', style: TextStyle(color: Colors.grey)),
+            dropdownColor: Colors.white,
+            isExpanded: true,
+          ),
+        ),
+      ),
+    );
+  }
+
   GestureDetector save() {
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         // เช็คว่าข้อมูลครับหรือยัง
-        if (selctedItemi == null ||
-            selctedItem == null ||
+        if (selectedCategory == null ||
             amount_c.text.isEmpty ||
             expalin_C.text.isEmpty) {
-          // แสดง snackbar แจ้งเตือน
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('กรุณากรอกข้อมูลให้ครบถ้วน'),
@@ -119,21 +218,42 @@ class _Add_ScreenState extends State<Add_Screen> {
           return;
         }
 
-        var add = Add_data(
-          selctedItemi!,
-          amount_c.text,
-          date,
-          expalin_C.text,
-          selctedItem!,
-        );
-        box.add(add);
-        Navigator.of(context).pop();
+        try {
+          double amount = double.parse(amount_c.text);
+
+          var transaction = Transaction(
+            id: DateTime.now().millisecondsSinceEpoch.toString(),
+            categoryId: selectedCategory!.id,
+            amount: amount,
+            datetime: date,
+            description: expalin_C.text,
+            type: selectedType,
+          );
+
+          await DatabaseService.addTransaction(transaction);
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('บันทึกข้อมูลสำเร็จ'),
+              backgroundColor: Colors.green,
+            ),
+          );
+
+          Navigator.of(context).pop();
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('เกิดข้อผิดพลาด: $e'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
       },
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
-          color: Color(0xFFFFC870 ),
+          color: Color(0xFFFFC870),
         ),
         width: 120,
         height: 50,
@@ -166,74 +286,16 @@ class _Add_ScreenState extends State<Add_Screen> {
             firstDate: DateTime(2020),
             lastDate: DateTime(2100),
           );
-          if (newDate == Null) return;
-          setState(() {
-            date = newDate!;
-          });
+          if (newDate != null) {
+            setState(() {
+              date = newDate;
+            });
+          }
         },
         child: Text(
           'Date : ${date.year} / ${date.day} / ${date.month}',
           style: TextStyle(fontSize: 15, color: Colors.black),
         ),
-      ),
-    );
-  }
-
-  Padding How() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 15),
-      child: Row(
-        children: _itemei
-            .map((item) => Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          selctedItemi = item;
-                        });
-                      },
-                      child: Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                              width: 2,
-                              color: selctedItemi == item
-                                  ? Colors.blue
-                                  : Color(0xffC5C5C5)),
-                          color: selctedItemi == item
-                              ? Colors.blue.withOpacity(0.1)
-                              : Colors.white,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(item,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: selctedItemi == item
-                                      ? Colors.blue
-                                      : Colors.black,
-                                  fontWeight: selctedItemi == item
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                )),
-                            SizedBox(width: 5),
-                            if (selctedItemi == item)
-                              Icon(Icons.check_circle,
-                                  color: Colors.blue, size: 20)
-                            else
-                              Icon(Icons.radio_button_unchecked,
-                                  color: Colors.grey, size: 20),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ))
-            .toList(),
       ),
     );
   }
@@ -255,7 +317,7 @@ class _Add_ScreenState extends State<Add_Screen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(width: 2, color: Color(0xFFFFC870 )),
+            borderSide: BorderSide(width: 2, color: Color(0xFFFFC870)),
           ),
         ),
       ),
@@ -278,73 +340,7 @@ class _Add_ScreenState extends State<Add_Screen> {
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(width: 2, color: Color(0xFFFFC870 )),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Padding name() {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: InputDecorator(
-        decoration: InputDecoration(
-          contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-          labelText: 'Payment type',
-          labelStyle: TextStyle(fontSize: 17, color: Colors.grey.shade500),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(width: 2, color: Color(0xffC5C5C5)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(width: 2, color: Color(0xFFFFC870 )),
-          ),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: selctedItem,
-            onChanged: ((value) {
-              setState(() {
-                selctedItem = value!;
-              });
-            }),
-            items: _item
-                .map(
-                  (e) => DropdownMenuItem(
-                    value: e,
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            child: Image.asset('images/${e}.png'),
-                          ),
-                          SizedBox(width: 10),
-                          Text(e, style: TextStyle(fontSize: 18)),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-                .toList(),
-            selectedItemBuilder: (BuildContext context) => _item
-                .map(
-                  (e) => Row(
-                    children: [
-                      SizedBox(width: 42, child: Image.asset('images/$e.png')),
-                      SizedBox(width: 5),
-                      Text(e),
-                    ],
-                  ),
-                )
-                .toList(),
-            hint: Text('Select payment type',
-                style: TextStyle(color: Colors.grey)),
-            dropdownColor: Colors.white,
-            isExpanded: true,
+            borderSide: BorderSide(width: 2, color: Color(0xFFFFC870)),
           ),
         ),
       ),
@@ -358,7 +354,7 @@ class _Add_ScreenState extends State<Add_Screen> {
           width: double.infinity,
           height: 240,
           decoration: BoxDecoration(
-            color: Color(0xFFFFC870 ),
+            color: Color(0xFFFFC870),
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(20),
               bottomRight: Radius.circular(20),

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/adapters.dart';
-import 'package:flowtrack/data/models/add_date.dart';
+import 'package:flowtrack/data/services/database_services.dart';
+import 'package:flowtrack/data/models/transaction.dart';
 import 'package:flowtrack/data/utlity.dart';
-// import 'package:hive/hive.dart';
-// import 'package:hive_flutter/hive_flutter.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -13,44 +11,68 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  var history;
-  final box = Hive.box<Add_data>('data');
+  List<Transaction> transactions = [];
   final List<String> day = [
     'Monday',
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
     'Friday',
     'Saturday',
     'Sunday',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTransactions();
+  }
+
+  void _loadTransactions() {
+    try {
+      setState(() {
+        transactions = DatabaseService.getTransactions(limit: 20);
+      });
+    } catch (e) {
+      print('Error loading transactions: $e');
+      setState(() {
+        transactions = [];
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: ValueListenableBuilder(
-          valueListenable: box.listenable(),
-          builder: (context, value, child) {
-            return CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: SizedBox(height: 340, child: _head()),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 15),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Transactions History',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                            color: Colors.black,
-                          ),
+        child: RefreshIndicator(
+          onRefresh: () async {
+            _loadTransactions();
+          },
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: SizedBox(height: 340, child: _head()),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Transactions History',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: Colors.black,
                         ),
-                        Text(
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          // TODO: Navigate to all transactions
+                        },
+                        child: Text(
                           'See All',
                           style: TextStyle(
                             fontWeight: FontWeight.w600,
@@ -58,54 +80,109 @@ class _HomeState extends State<Home> {
                             color: Colors.grey,
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ),
-                SliverList(
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    history = box.values.toList()[index];
-                    return getList(history, index);
-                  }, childCount: box.length),
-                ),
-              ],
-            );
-          },
+              ),
+              transactions.isEmpty
+                  ? SliverToBoxAdapter(
+                      child: Container(
+                        height: 200,
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.inbox, size: 64, color: Colors.grey),
+                              SizedBox(height: 16),
+                              Text(
+                                'No transactions yet',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Add your first transaction to get started',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    )
+                  : SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          return getList(transactions[index], index);
+                        },
+                        childCount: transactions.length,
+                      ),
+                    ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget getList(Add_data history, int index) {
+  Widget getList(Transaction transaction, int index) {
     return Dismissible(
-      key: UniqueKey(),
-      onDismissed: (direction) {
-        history.delete();
+      key: Key(transaction.id),
+      onDismissed: (direction) async {
+        try {
+          await DatabaseService.deleteTransaction(transaction.id);
+          _loadTransactions(); // Refresh list
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Transaction deleted')),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error deleting transaction')),
+          );
+        }
       },
-      child: get(index, history),
+      child: get(transaction),
     );
   }
 
-  ListTile get(int index, Add_data history) {
+  ListTile get(Transaction transaction) {
+    final category = DatabaseService.getCategoryById(transaction.categoryId);
+    final iconName = category?.iconName ?? 'Giftbox';
+
     return ListTile(
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(5),
-        child: Image.asset('images/${history.name}.png', height: 40),
+        child: Container(
+          width: 40,
+          height: 40,
+          child: Image.asset(
+            'images/$iconName.png',
+            errorBuilder: (context, error, stackTrace) {
+              return Icon(Icons.help, size: 40, color: Colors.grey);
+            },
+          ),
+        ),
       ),
       title: Text(
-        history.name,
+        transaction.description, // เปลี่ยนจาก category?.name เป็น description
         style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
       ),
       subtitle: Text(
-        '${day[history.datetime.weekday - 1]}  ${history.datetime.year}-${history.datetime.day}-${history.datetime.month}',
-        style: TextStyle(fontWeight: FontWeight.w600),
+        '${category?.name ?? 'Unknown'} • ${day[transaction.datetime.weekday - 1]}  ${transaction.datetime.year}-${transaction.datetime.day}-${transaction.datetime.month}',
+        style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey[600]),
       ),
       trailing: Text(
-        history.amount,
+        transaction.formattedAmount,
         style: TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 19,
-          color: history.IN == 'Income' ? Colors.green : Colors.red,
+          color: transaction.isIncome ? Colors.green : Colors.red,
         ),
       ),
     );
@@ -126,50 +203,29 @@ class _HomeState extends State<Home> {
                   bottomRight: Radius.circular(20),
                 ),
               ),
-              child: Stack(
-                children: [
-                  // Positioned(
-                  //   top: 35,
-                  //   left: 340,
-                  //   child: ClipRRect(
-                  //     borderRadius: BorderRadius.circular(7),
-                  //     child: Container(
-                  //       height: 40,
-                  //       width: 40,
-                  //       color: Color.fromRGBO(250, 250, 250, 0.1),
-                  //       // child: Icon(
-                  //       //   Icons.notification_add_outlined,
-                  //       //   size: 30,
-                  //       //   color: Colors.white,
-                  //       // ),
-                  //     ),
-                  //   ),
-                  // ), ไม่ใช้แต่อย่าพึ่งลบ
-                  Padding(
-                    padding: const EdgeInsets.only(top: 30, left: 10),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'FlowTrack Project',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 24,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          'Mr.Suppapol Tabudda',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ],
+              child: Padding(
+                padding: const EdgeInsets.only(top: 30, left: 10),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'FlowTrack Project',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 24,
+                        color: Colors.white,
+                      ),
                     ),
-                  ),
-                ],
+                    Text(
+                      'Mr.Suppapol Tabudda',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -208,7 +264,6 @@ class _HomeState extends State<Home> {
                           color: Colors.white,
                         ),
                       ),
-                      // Icon(Icons.more_horiz, color: Colors.white),
                     ],
                   ),
                 ),
@@ -218,7 +273,7 @@ class _HomeState extends State<Home> {
                   child: Row(
                     children: [
                       Text(
-                        '\$ ${total()}',
+                        '\$ ${total().toStringAsFixed(2)}',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 25,
@@ -252,7 +307,6 @@ class _HomeState extends State<Home> {
                               fontWeight: FontWeight.bold,
                               fontSize: 17,
                               color: Colors.white,
-                              // color: Color.fromARGB(255, 216, 216, 216),
                             ),
                           ),
                         ],
@@ -275,7 +329,6 @@ class _HomeState extends State<Home> {
                               fontWeight: FontWeight.w500,
                               fontSize: 17,
                               color: Colors.white,
-                              // color: Color.fromARGB(255, 216, 216, 216),
                             ),
                           ),
                         ],
@@ -289,7 +342,7 @@ class _HomeState extends State<Home> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '\$ ${income()}',
+                        '\$ ${income().toStringAsFixed(2)}',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 17,
@@ -297,7 +350,7 @@ class _HomeState extends State<Home> {
                         ),
                       ),
                       Text(
-                        '\$ ${expenses()}',
+                        '\$ ${expenses().abs().toStringAsFixed(2)}',
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 17,

@@ -1,129 +1,142 @@
-import 'package:hive/hive.dart';
-import 'package:flowtrack/data/models/add_date.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+// lib/data/utlity.dart
+import 'package:flowtrack/data/services/database_services.dart';
+import 'package:flowtrack/data/models/transaction.dart';
 
-int totals = 0;
+// ใช้ DatabaseService แทน Hive box โดยตรง
+double total() {
+  try {
+    return DatabaseService.getTotalBalance();
+  } catch (e) {
+    print('Error getting total balance: $e');
+    return 0.0;
+  }
+}
 
-final box = Hive.box<Add_data>('data');
+double income() {
+  try {
+    return DatabaseService.getTotalIncome();
+  } catch (e) {
+    print('Error getting total income: $e');
+    return 0.0;
+  }
+}
 
-int total() {
-  var history2 = box.values.toList();
-  List a = [0, 0];
-  for (var i = 0; i < history2.length; i++) {
-    a.add(
-      history2[i].IN == 'Income'
-          ? int.parse(history2[i].amount)
-          : int.parse(history2[i].amount) * -1,
+double expenses() {
+  try {
+    return DatabaseService.getTotalExpense();
+  } catch (e) {
+    print('Error getting total expense: $e');
+    return 0.0;
+  }
+}
+
+List<Transaction> today() {
+  try {
+    DateTime now = DateTime.now();
+    DateTime startOfDay = DateTime(now.year, now.month, now.day);
+    DateTime endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    
+    return DatabaseService.getTransactions(
+      startDate: startOfDay,
+      endDate: endOfDay,
     );
+  } catch (e) {
+    print('Error getting today transactions: $e');
+    return [];
   }
-  totals = a.reduce((value, element) => value + element);
-  return totals;
 }
 
-int income() {
-  var history2 = box.values.toList();
-  List a = [0, 0];
-  for (var i = 0; i < history2.length; i++) {
-    a.add(history2[i].IN == 'Income' ? int.parse(history2[i].amount) : 0);
-  }
-  totals = a.reduce((value, element) => value + element);
-  return totals;
-}
-
-int expenses() {
-  var history2 = box.values.toList();
-  List a = [0, 0];
-  for (var i = 0; i < history2.length; i++) {
-    a.add(history2[i].IN == 'Income' ? 0 : int.parse(history2[i].amount) * -1);
-  }
-  totals = a.reduce((value, element) => value + element);
-  return totals;
-}
-
-List<Add_data> today() {
-  List<Add_data> a = [];
-  var history2 = box.values.toList();
-  DateTime date = DateTime.now();
-  for (var i = 0; i < history2.length; i++) {
-    if (history2[i].datetime.day == date.day) {
-      a.add(history2[i]);
-    }
-  }
-  return a;
-}
-
-List<Add_data> week() {
-  List<Add_data> a = [];
-  var history2 = box.values.toList();
-  DateTime date = DateTime.now();
-  for (var i = 0; i < history2.length; i++) {
-    if (date.day - 7 <= history2[i].datetime.day &&
-        history2[i].datetime.day <= date.day) {
-      a.add(history2[i]);
-    }
-  }
-  return a;
-}
-
-List<Add_data> month() {
-  List<Add_data> a = [];
-  var history2 = box.values.toList();
-  DateTime date = DateTime.now();
-  for (var i = 0; i < history2.length; i++) {
-    if (history2[i].datetime.month == date.month) {
-      a.add(history2[i]);
-    }
-  }
-  return a;
-}
-
-List<Add_data> year() {
-  List<Add_data> a = [];
-  var history2 = box.values.toList();
-  DateTime date = DateTime.now();
-  for (var i = 0; i < history2.length; i++) {
-    if (history2[i].datetime.year == date.year) {
-      a.add(history2[i]);
-    }
-  }
-  return a;
-}
-
-int total_chart(List<Add_data> history2) {
-  List a = [0, 0];
-  for (var i = 0; i < history2.length; i++) {
-    a.add(
-      history2[i].IN == 'Income'
-          ? int.parse(history2[i].amount)
-          : int.parse(history2[i].amount) * -1,
+List<Transaction> week() {
+  try {
+    DateTime now = DateTime.now();
+    DateTime weekAgo = now.subtract(Duration(days: 7));
+    
+    return DatabaseService.getTransactions(
+      startDate: weekAgo,
+      endDate: now,
     );
+  } catch (e) {
+    print('Error getting week transactions: $e');
+    return [];
   }
-  totals = a.reduce((value, element) => value + element);
-  return totals;
 }
 
-List time(List<Add_data> history2, bool hour) {
-  List<Add_data> a = [];
-  List total = [0, 0];
-  int counter = 0;
-  for (var c = 0; c < history2.length; c++) {
-    for (var i = c; i < history2.length; i++) {
-      if (hour) {
-        if (history2[i].datetime.hour == history2[c].datetime.hour) {
-          a.add(history2[i]);
-          counter = i;
-        }
+List<Transaction> month() {
+  try {
+    DateTime now = DateTime.now();
+    DateTime startOfMonth = DateTime(now.year, now.month, 1);
+    DateTime endOfMonth = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+    
+    return DatabaseService.getTransactions(
+      startDate: startOfMonth,
+      endDate: endOfMonth,
+    );
+  } catch (e) {
+    print('Error getting month transactions: $e');
+    return [];
+  }
+}
+
+List<Transaction> year() {
+  try {
+    DateTime now = DateTime.now();
+    DateTime startOfYear = DateTime(now.year, 1, 1);
+    DateTime endOfYear = DateTime(now.year, 12, 31, 23, 59, 59);
+    
+    return DatabaseService.getTransactions(
+      startDate: startOfYear,
+      endDate: endOfYear,
+    );
+  } catch (e) {
+    print('Error getting year transactions: $e');
+    return [];
+  }
+}
+
+double total_chart(List<Transaction> transactions) {
+  try {
+    double total = 0;
+    for (var transaction in transactions) {
+      if (transaction.isIncome) {
+        total += transaction.amount;
       } else {
-        if (history2[i].datetime.day == history2[c].datetime.day) {
-          a.add(history2[i]);
-          counter = i;
-        }
+        total -= transaction.amount;
       }
     }
-    total.add(total_chart(a));
-    a.clear();
-    c = counter;
+    return total;
+  } catch (e) {
+    print('Error calculating chart total: $e');
+    return 0.0;
   }
-  print(total);
-  return total;
+}
+
+List<double> time(List<Transaction> transactions, bool hour) {
+  try {
+    if (transactions.isEmpty) return [0.0];
+    
+    Map<String, double> grouped = {};
+    
+    for (var transaction in transactions) {
+      String key;
+      if (hour) {
+        // กลุ่มตามชั่วโมง
+        key = transaction.datetime.hour.toString();
+      } else {
+        // กลุ่มตามวัน
+        key = transaction.datetime.day.toString();
+      }
+      
+      double amount = transaction.isIncome ? transaction.amount : -transaction.amount;
+      grouped[key] = (grouped[key] ?? 0) + amount;
+    }
+    
+    // แปลงเป็น List และเรียงตามลำดับ
+    var sortedEntries = grouped.entries.toList()
+      ..sort((a, b) => int.parse(a.key).compareTo(int.parse(b.key)));
+    
+    return sortedEntries.map((e) => e.value).toList();
+  } catch (e) {
+    print('Error processing time data: $e');
+    return [0.0];
+  }
 }

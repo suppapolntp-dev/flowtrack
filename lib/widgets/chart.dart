@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flowtrack/data/models/add_date.dart';
+import 'package:flowtrack/data/models/transaction.dart';
 import 'package:flowtrack/data/utlity.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
@@ -12,31 +12,32 @@ class Chart extends StatefulWidget {
 }
 
 class _ChartState extends State<Chart> {
-  List<Add_data>? a;
+  List<Transaction>? a;
   bool b = true;
   bool j = true;
 
   @override
   Widget build(BuildContext context) {
+    // กำหนดข้อมูลตาม index
     switch (widget.indexx) {
       case 0:
         a = today();
-        b = true;
-        j = true;
+        b = true;  // show by hour
+        j = true;  // show time details
         break;
       case 1:
         a = week();
-        b = false;
-        j = true;
+        b = false; // show by day
+        j = true;  // show time details
         break;
       case 2:
         a = month();
-        b = false;
-        j = true;
+        b = false; // show by day
+        j = true;  // show time details
         break;
       case 3:
         a = year();
-        j = false;
+        j = false; // show by month
         break;
       default:
     }
@@ -47,113 +48,132 @@ class _ChartState extends State<Chart> {
         width: double.infinity,
         height: 300,
         child: Center(
-          child: Text('ไม่มีข้อมูลสำหรับแสดงผล'),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.show_chart, size: 64, color: Colors.grey),
+              SizedBox(height: 16),
+              Text(
+                'No data to display',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              Text(
+                'Add some transactions to see the chart',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
-
-    // ดึงข้อมูลจาก time function
-    var timeData = time(a!, b ? true : false);
-
-    // เช็คว่า timeData ไม่ว่าง
-    if (timeData.isEmpty) {
-      return SizedBox(
-        width: double.infinity,
-        height: 300,
-        child: Center(
-          child: Text('ไม่มีข้อมูลสำหรับแสดงผล'),
-        ),
-      );
-    }
-
-    // ใช้ขนาดของ a! เป็นหลัก เพื่อป้องกัน RangeError
-    int maxLength = a!.length;
 
     // สร้างข้อมูลสำหรับ chart
-    List<SalesData> chartData = [];
-    int cumulativeSum = 0;
-
-    for (int index = 0; index < maxLength; index++) {
-      // ตรวจสอบว่า index ไม่เกินขอบเขตของ timeData
-      int currentValue = index < timeData.length ? timeData[index] : 0;
-
-      // คำนวณ cumulative sum
-      if (b) {
-        // สำหรับ case วัน (รายชั่วโมง)
-        cumulativeSum = index > 0 ? cumulativeSum + currentValue : currentValue;
-      } else {
-        // สำหรับ case สัปดาห์/เดือน/ปี
-        cumulativeSum = index > 0 ? cumulativeSum + currentValue : currentValue;
-      }
-
-      // สร้าง x-axis label
-      String xLabel;
-      if (j) {
-        if (b) {
-          // แสดงชั่วโมง
-          xLabel = a![index].datetime.hour.toString();
-        } else {
-          // แสดงวันที่ หรือวันในสัปดาห์สำหรับ week
-          if (widget.indexx == 1) {
-            // Week case
-            List<String> dayNames = [
-              'จันทร์',
-              'อังคาร',
-              'พุธ',
-              'พฤหัสบดี',
-              'ศุกร์',
-              'เสาร์',
-              'อาทิตย์'
-            ];
-            int weekday = a![index].datetime.weekday;
-            xLabel = dayNames[weekday - 1];
-          } else {
-            xLabel = a![index].datetime.day.toString();
-          }
-        }
-      } else {
-        // แสดงเดือนสำหรับ year case
-        List<String> monthNames = [
-          'ม.ค.',
-          'ก.พ.',
-          'มี.ค.',
-          'เม.ย.',
-          'พ.ค.',
-          'มิ.ย.',
-          'ก.ค.',
-          'ส.ค.',
-          'ก.ย.',
-          'ต.ค.',
-          'พ.ย.',
-          'ธ.ค.'
-        ];
-        xLabel = monthNames[a![index].datetime.month - 1];
-      }
-
-      chartData.add(SalesData(xLabel, cumulativeSum));
-    }
+    List<SalesData> chartData = _createChartData();
 
     return SizedBox(
       width: double.infinity,
       height: 300,
       child: SfCartesianChart(
-        primaryXAxis: CategoryAxis(),
+        primaryXAxis: CategoryAxis(
+          labelStyle: TextStyle(fontSize: 12),
+        ),
+        primaryYAxis: NumericAxis(
+          labelFormat: '\${value}',
+        ),
+        tooltipBehavior: TooltipBehavior(enable: true),
         series: <SplineSeries<SalesData, String>>[
           SplineSeries<SalesData, String>(
             color: Color.fromARGB(255, 255, 200, 112),
             width: 3,
             dataSource: chartData,
-            xValueMapper: (SalesData sales, _) => sales.year,
-            yValueMapper: (SalesData sales, _) => sales.sales,
+            xValueMapper: (SalesData sales, _) => sales.period,
+            yValueMapper: (SalesData sales, _) => sales.amount,
+            markerSettings: MarkerSettings(
+              isVisible: true,
+              color: Color.fromARGB(255, 255, 200, 112),
+              borderColor: Colors.white,
+              borderWidth: 2,
+            ),
           ),
         ],
       ),
     );
   }
+
+  List<SalesData> _createChartData() {
+    List<SalesData> chartData = [];
+    
+    if (a == null || a!.isEmpty) return chartData;
+
+    // จัดกลุ่มข้อมูลตามช่วงเวลา
+    Map<String, double> groupedData = {};
+
+    for (var transaction in a!) {
+      String period = _getPeriodLabel(transaction);
+      double amount = transaction.isIncome ? transaction.amount : -transaction.amount;
+      
+      groupedData[period] = (groupedData[period] ?? 0) + amount;
+    }
+
+    // แปลงเป็น List และเรียงตามลำดับ
+    var sortedEntries = groupedData.entries.toList();
+    
+    // เรียงลำดับตาม period
+    if (widget.indexx == 0) {
+      // เรียงตามชั่วโมง
+      sortedEntries.sort((a, b) => int.parse(a.key).compareTo(int.parse(b.key)));
+    } else if (widget.indexx == 1) {
+      // เรียงตามวันในสัปดาห์
+      final dayOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      sortedEntries.sort((a, b) => dayOrder.indexOf(a.key).compareTo(dayOrder.indexOf(b.key)));
+    } else if (widget.indexx == 2) {
+      // เรียงตามวันในเดือน
+      sortedEntries.sort((a, b) => int.parse(a.key).compareTo(int.parse(b.key)));
+    } else {
+      // เรียงตามเดือนในปี
+      final monthOrder = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      sortedEntries.sort((a, b) => monthOrder.indexOf(a.key).compareTo(monthOrder.indexOf(b.key)));
+    }
+
+    // สร้าง cumulative data
+    double cumulativeAmount = 0;
+    for (var entry in sortedEntries) {
+      cumulativeAmount += entry.value;
+      chartData.add(SalesData(entry.key, cumulativeAmount));
+    }
+
+    return chartData;
+  }
+
+  String _getPeriodLabel(Transaction transaction) {
+    switch (widget.indexx) {
+      case 0: // Day - show by hour
+        return transaction.datetime.hour.toString();
+      case 1: // Week - show by day name
+        const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        return dayNames[transaction.datetime.weekday - 1];
+      case 2: // Month - show by day
+        return transaction.datetime.day.toString();
+      case 3: // Year - show by month
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return monthNames[transaction.datetime.month - 1];
+      default:
+        return '';
+    }
+  }
 }
 
 class SalesData {
-  SalesData(this.year, this.sales);
-  final String year;
-  final int sales;
+  SalesData(this.period, this.amount);
+  final String period;
+  final double amount;
 }
