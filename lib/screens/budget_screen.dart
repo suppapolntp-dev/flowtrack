@@ -1,10 +1,11 @@
-// lib/screens/budget_screen.dart
+// lib/screens/budget_screen.dart - แก้ไขให้เชื่อมกับ Home
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 
 class BudgetScreen extends StatefulWidget {
-  const BudgetScreen({super.key});
+  final VoidCallback? onBudgetUpdated; // เพิ่ม callback
+  const BudgetScreen({super.key, this.onBudgetUpdated});
 
   @override
   State<BudgetScreen> createState() => _BudgetScreenState();
@@ -15,7 +16,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
   double currentSpent = 0;
   double weeklyBudget = 0;
   double dailyBudget = 0;
-  
+
   final TextEditingController budgetController = TextEditingController();
   bool isLoading = true;
 
@@ -29,18 +30,13 @@ class _BudgetScreenState extends State<BudgetScreen> {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       monthlyBudget = prefs.getDouble('monthly_budget') ?? 0;
-      
-      // คำนวณการใช้จ่ายปัจจุบัน
+
       DateTime now = DateTime.now();
       DateTime startOfMonth = DateTime(now.year, now.month, 1);
       DateTime endOfMonth = DateTime(now.year, now.month + 1, 0);
-      
-      currentSpent = DatabaseService.getTotalExpense(
-        startDate: startOfMonth,
-        endDate: endOfMonth,
-      );
 
-      // คำนวณงบประมาณรายสัปดาห์และรายวัน
+      currentSpent = DatabaseService.getTotalExpense(
+          startDate: startOfMonth, endDate: endOfMonth);
       weeklyBudget = monthlyBudget / 4;
       dailyBudget = monthlyBudget / 30;
 
@@ -58,33 +54,33 @@ class _BudgetScreenState extends State<BudgetScreen> {
   Future<void> _saveBudget() async {
     try {
       double newBudget = double.parse(budgetController.text);
-      if (newBudget <= 0) {
-        throw Exception('Budget must be greater than 0');
-      }
+      if (newBudget <= 0) throw Exception('Budget must be greater than 0');
 
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setDouble('monthly_budget', newBudget);
-      
+
       setState(() {
         monthlyBudget = newBudget;
         weeklyBudget = newBudget / 4;
         dailyBudget = newBudget / 30;
       });
-      
+
       budgetController.clear();
-      
+
+      // เรียก callback เพื่ออัปเดต Home
+      widget.onBudgetUpdated?.call();
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Budget updated successfully!'),
-          backgroundColor: Colors.green,
-        ),
+            content: Text('Budget updated successfully!'),
+            backgroundColor: Colors.green),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: ${e.toString().replaceAll('Exception: ', '')}'),
-          backgroundColor: Colors.red,
-        ),
+            content:
+                Text('Error: ${e.toString().replaceAll('Exception: ', '')}'),
+            backgroundColor: Colors.red),
       );
     }
   }
@@ -106,8 +102,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 children: [
                   _buildCurrentBudgetCard(),
                   SizedBox(height: 20),
-                  _buildBudgetBreakdown(),
-                  SizedBox(height: 20),
+                  if (monthlyBudget > 0) ...[
+                    _buildBudgetBreakdown(),
+                    SizedBox(height: 20),
+                  ],
                   _buildSetBudgetCard(),
                   SizedBox(height: 20),
                   _buildBudgetTips(),
@@ -126,47 +124,35 @@ class _BudgetScreenState extends State<BudgetScreen> {
           borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              blurRadius: 10,
-              offset: Offset(0, 2),
-            ),
+                color: Colors.grey.withOpacity(0.1),
+                blurRadius: 10,
+                offset: Offset(0, 2))
           ],
         ),
         child: Column(
           children: [
-            Icon(
-              Icons.account_balance_wallet,
-              size: 60,
-              color: Colors.grey,
-            ),
+            Icon(Icons.account_balance_wallet, size: 60, color: Colors.grey),
             SizedBox(height: 16),
-            Text(
-              'No Budget Set',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey,
-              ),
-            ),
-            Text(
-              'Set a monthly budget to track your spending',
-              style: TextStyle(
-                color: Colors.grey.shade600,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text('No Budget Set',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey)),
+            Text('Set a monthly budget to track your spending',
+                style: TextStyle(color: Colors.grey.shade600),
+                textAlign: TextAlign.center),
           ],
         ),
       );
     }
 
-    double percentage = monthlyBudget > 0 ? (currentSpent / monthlyBudget) * 100 : 0;
+    double percentage =
+        monthlyBudget > 0 ? (currentSpent / monthlyBudget) * 100 : 0;
     double remaining = monthlyBudget - currentSpent;
-    
-    Color progressColor = percentage > 90 
-        ? Colors.red 
-        : percentage > 70 
-            ? Colors.orange 
+    Color progressColor = percentage > 90
+        ? Colors.red
+        : percentage > 70
+            ? Colors.orange
             : Colors.green;
 
     return Container(
@@ -176,10 +162,9 @@ class _BudgetScreenState extends State<BudgetScreen> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, 2))
         ],
       ),
       child: Column(
@@ -187,36 +172,27 @@ class _BudgetScreenState extends State<BudgetScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Monthly Budget',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              Text('Monthly Budget',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               Icon(Icons.edit, color: Colors.grey),
             ],
           ),
           SizedBox(height: 10),
-          Text(
-            '\$${monthlyBudget.toStringAsFixed(2)}',
-            style: TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Color(0xFFFFC870),
-            ),
-          ),
+          Text('\$${monthlyBudget.toStringAsFixed(2)}',
+              style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFFFC870))),
           SizedBox(height: 20),
-          
-          // Progress Bar
           Column(
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('Spent', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  Text('${percentage.toStringAsFixed(1)}%', 
-                       style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text('Spent',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  Text('${percentage.toStringAsFixed(1)}%',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                 ],
               ),
               SizedBox(height: 5),
@@ -228,48 +204,37 @@ class _BudgetScreenState extends State<BudgetScreen> {
               ),
             ],
           ),
-          
           SizedBox(height: 20),
-          
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Column(
                 children: [
-                  Text(
-                    'Spent',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '\$${currentSpent.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
-                  ),
+                  Text('Spent',
+                      style:
+                          TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text('\$${currentSpent.toStringAsFixed(2)}',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.red)),
                 ],
               ),
               Container(height: 40, width: 1, color: Colors.grey.shade300),
               Column(
                 children: [
-                  Text(
-                    'Remaining',
-                    style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-                  ),
-                  Text(
-                    '\$${remaining.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: remaining >= 0 ? Colors.green : Colors.red,
-                    ),
-                  ),
+                  Text('Remaining',
+                      style:
+                          TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                  Text('\$${remaining.toStringAsFixed(2)}',
+                      style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: remaining >= 0 ? Colors.green : Colors.red)),
                 ],
               ),
             ],
           ),
-          
           if (percentage > 80)
             Container(
               margin: EdgeInsets.only(top: 15),
@@ -284,14 +249,13 @@ class _BudgetScreenState extends State<BudgetScreen> {
                   SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      percentage > 100 
+                      percentage > 100
                           ? 'You have exceeded your budget!'
                           : 'You are close to your budget limit!',
                       style: TextStyle(
-                        color: progressColor,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12,
-                      ),
+                          color: progressColor,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 12),
                     ),
                   ),
                 ],
@@ -303,8 +267,6 @@ class _BudgetScreenState extends State<BudgetScreen> {
   }
 
   Widget _buildBudgetBreakdown() {
-    if (monthlyBudget <= 0) return SizedBox.shrink();
-
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -312,22 +274,16 @@ class _BudgetScreenState extends State<BudgetScreen> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, 2))
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Budget Breakdown',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('Budget Breakdown',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           SizedBox(height: 15),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -354,20 +310,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
           child: Icon(icon, color: Color(0xFFFFC870)),
         ),
         SizedBox(height: 8),
-        Text(
-          period,
-          style: TextStyle(
-            color: Colors.grey.shade600,
-            fontSize: 12,
-          ),
-        ),
-        Text(
-          '\$${amount.toStringAsFixed(0)}',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
+        Text(period,
+            style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+        Text('\$${amount.toStringAsFixed(0)}',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
       ],
     );
   }
@@ -380,22 +326,16 @@ class _BudgetScreenState extends State<BudgetScreen> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, 2))
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Set Monthly Budget',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('Set Monthly Budget',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           SizedBox(height: 15),
           TextField(
             controller: budgetController,
@@ -403,9 +343,8 @@ class _BudgetScreenState extends State<BudgetScreen> {
             decoration: InputDecoration(
               labelText: 'Monthly Budget Amount',
               prefixText: '\$ ',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
+              border:
+                  OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
                 borderSide: BorderSide(color: Color(0xFFFFC870), width: 2),
@@ -421,16 +360,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Color(0xFFFFC870),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
+                    borderRadius: BorderRadius.circular(10)),
               ),
-              child: Text(
-                'Update Budget',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
+              child: Text('Update Budget',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w600)),
             ),
           ),
         ],
@@ -453,14 +387,11 @@ class _BudgetScreenState extends State<BudgetScreen> {
             children: [
               Icon(Icons.lightbulb, color: Colors.blue.shade600),
               SizedBox(width: 8),
-              Text(
-                'Budget Tips',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade600,
-                ),
-              ),
+              Text('Budget Tips',
+                  style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade600)),
             ],
           ),
           SizedBox(height: 10),
@@ -469,10 +400,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
             '• Track your expenses regularly\n'
             '• Leave room for unexpected expenses\n'
             '• Review and adjust monthly',
-            style: TextStyle(
-              color: Colors.blue.shade700,
-              height: 1.5,
-            ),
+            style: TextStyle(color: Colors.blue.shade700, height: 1.5),
           ),
         ],
       ),
