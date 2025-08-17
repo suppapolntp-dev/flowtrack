@@ -1,4 +1,4 @@
-// lib/screens/home.dart - แก้ไข overflow + เพิ่ม budget
+// lib/screens/home.dart - แก้ไข overflow
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowtrack/data/services/database_services.dart';
@@ -31,6 +31,10 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _loadData();
+
+    DatabaseService.transactionStream.listen((transactions) {
+      if (mounted) _loadData();
+    });
   }
 
   Future<void> _loadData() async {
@@ -80,8 +84,9 @@ class _HomeState extends State<Home> {
           onRefresh: () async => _loadData(),
           child: CustomScrollView(
             slivers: [
-              SliverToBoxAdapter(
-                  child: SizedBox(height: 380, child: _head())), // เพิ่มความสูง
+              // ใช้ SliverToBoxAdapter แทน container ที่มีความสูงคงที่
+              SliverToBoxAdapter(child: _head()),
+              SliverToBoxAdapter(child: SizedBox(height: 20)),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -103,6 +108,7 @@ class _HomeState extends State<Home> {
                   ),
                 ),
               ),
+              SliverToBoxAdapter(child: SizedBox(height: 10)),
               transactions.isEmpty
                   ? SliverToBoxAdapter(
                       child: Container(
@@ -132,6 +138,8 @@ class _HomeState extends State<Home> {
                         childCount: transactions.length,
                       ),
                     ),
+              // เพิ่ม spacing ด้านล่าง
+              SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),
         ),
@@ -145,7 +153,6 @@ class _HomeState extends State<Home> {
       onDismissed: (direction) async {
         try {
           await DatabaseService.deleteTransaction(transaction.id);
-          _loadData();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Transaction deleted')),
           );
@@ -189,202 +196,213 @@ class _HomeState extends State<Home> {
   }
 
   Widget _head() {
-    return Stack(
+    // ใช้ Column แทน Stack เพื่อหลีกเลี่ยง overflow
+    return Column(
       children: [
-        Column(
-          children: [
-            Container(
-              width: double.infinity,
-              height: 240,
-              decoration: BoxDecoration(
-                color: Color(0xFFFFC870),
-                borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20)),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.only(top: 30, left: 10),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('FlowTrack Project',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 24,
-                            color: Colors.white)),
-                    Text('Mr.Suppapol Tabudda',
-                        style: TextStyle(
-                            fontWeight: FontWeight.w500,
-                            fontSize: 12,
-                            color: Colors.white)),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-
-        // Main Balance Card
-        Positioned(
-          top: 140,
-          left: 37,
-          right: 37,
-          child: Container(
-            height: 170,
-            decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                    color: Color.fromARGB(255, 195, 148, 73),
-                    offset: Offset(0, 6),
-                    blurRadius: 12,
-                    spreadRadius: 1)
+        // Header Background
+        Container(
+          width: double.infinity,
+          height: 200, // ลดความสูงลง
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor,
+            borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20)),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 30, left: 10),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('FlowTrack Project',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 24,
+                        color: Colors.white)),
+                Text('Mr.Suppapol Tabudda',
+                    style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                        color: Colors.white)),
               ],
-              color: Color.fromARGB(255, 255, 200, 112),
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(15),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Total Balance',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w500,
-                              fontSize: 16,
-                              color: Colors.white)),
-                    ],
-                  ),
-                  SizedBox(height: 7),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text('\$ ${total().toStringAsFixed(2)}',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 25,
-                            color: Colors.white)),
-                  ),
-                  SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          CircleAvatar(
-                              radius: 13,
-                              backgroundColor:
-                                  Color.fromARGB(255, 255, 200, 112),
-                              child: Icon(Icons.arrow_downward,
-                                  color: Colors.white, size: 19)),
-                          SizedBox(width: 7),
-                          Text('Income',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 17,
-                                  color: Colors.white)),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          CircleAvatar(
-                              radius: 13,
-                              backgroundColor:
-                                  Color.fromARGB(255, 255, 200, 112),
-                              child: Icon(Icons.arrow_upward,
-                                  color: Colors.white, size: 19)),
-                          SizedBox(width: 7),
-                          Text('Expenses',
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 17,
-                                  color: Colors.white)),
-                        ],
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 5),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('\$ ${income().toStringAsFixed(2)}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 17,
-                              color: Colors.white)),
-                      Text('\$ ${expenses().abs().toStringAsFixed(2)}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.w600,
-                              fontSize: 17,
-                              color: Colors.white)),
-                    ],
-                  ),
-                ],
-              ),
             ),
           ),
         ),
 
-        // Budget Card
-        if (monthlyBudget > 0)
-          Positioned(
-            top: 320,
-            left: 37,
-            right: 37,
-            child: Container(
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _getBudgetColor().withOpacity(0.3)),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      blurRadius: 8,
-                      offset: Offset(0, 2))
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: _getBudgetColor().withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Icon(Icons.account_balance_wallet,
-                          color: _getBudgetColor(), size: 20),
+        // Cards ที่ไม่ overlap
+          Transform.translate(
+            offset: Offset(0, -50), // ขยับขึ้นนิดหน่อย
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  // Main Balance Card
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                            color:
+                                Theme.of(context).primaryColor.withOpacity(0.3),
+                            offset: Offset(0, 6),
+                            blurRadius: 12,
+                            spreadRadius: 1)
+                      ],
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: BorderRadius.circular(15),
                     ),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Total Balance',
+                            style: TextStyle(
+                                fontWeight: FontWeight.w500,
+                                fontSize: 16,
+                                color: Colors.white)),
+                        SizedBox(height: 10),
+                        Text('\$ ${total().toStringAsFixed(2)}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 28,
+                                color: Colors.white)),
+                        SizedBox(height: 20),
+
+                        // Income/Expense Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      CircleAvatar(
+                                          radius: 12,
+                                          backgroundColor:
+                                              Colors.white.withOpacity(0.3),
+                                          child: Icon(Icons.arrow_downward,
+                                              color: Colors.white, size: 16)),
+                                      SizedBox(width: 8),
+                                      Text('Income',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 14,
+                                              color: Colors.white)),
+                                    ],
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text('\$ ${income().toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                          color: Colors.white)),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              height: 40,
+                              width: 1,
+                              color: Colors.white.withOpacity(0.3),
+                            ),
+                            Expanded(
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      CircleAvatar(
+                                          radius: 12,
+                                          backgroundColor:
+                                              Colors.white.withOpacity(0.3),
+                                          child: Icon(Icons.arrow_upward,
+                                              color: Colors.white, size: 16)),
+                                      SizedBox(width: 8),
+                                      Text('Expenses',
+                                          style: TextStyle(
+                                              fontWeight: FontWeight.w500,
+                                              fontSize: 14,
+                                              color: Colors.white)),
+                                    ],
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                      '\$ ${expenses().abs().toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                          color: Colors.white)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Budget Card
+                  if (monthlyBudget > 0) ...[
+                    SizedBox(height: 15),
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border:
+                            Border.all(color: _getBudgetColor().withOpacity(0.3)),
+                        boxShadow: [
+                          BoxShadow(
+                              color: Colors.grey.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: Offset(0, 2))
+                        ],
+                      ),
+                      child: Row(
                         children: [
-                          Text('Monthly Budget',
-                              style: TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w500)),
-                          Text(
-                                '${_getBudgetPercentage().toStringAsFixed(0)}% used • \$${(monthlyBudget - currentSpent).toStringAsFixed(0)} left',
-                              style: TextStyle(
-                                  fontSize: 10, color: Colors.grey[600])),
+                          Container(
+                            padding: EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: _getBudgetColor().withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.account_balance_wallet,
+                                color: _getBudgetColor(), size: 20),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Monthly Budget',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w600)),
+                                SizedBox(height: 4),
+                                Text(
+                                    '${_getBudgetPercentage().toStringAsFixed(0)}% used • \$${(monthlyBudget - currentSpent).toStringAsFixed(0)} left',
+                                    style: TextStyle(
+                                        fontSize: 12, color: Colors.grey[600])),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            width: 50,
+                            child: LinearProgressIndicator(
+                              value: _getBudgetPercentage() / 100,
+                              backgroundColor: Colors.grey.shade200,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  _getBudgetColor()),
+                              minHeight: 6,
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    Container(
-                      width: 40,
-                      child: LinearProgressIndicator(
-                        value: _getBudgetPercentage() / 100,
-                        backgroundColor: Colors.grey.shade200,
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(_getBudgetColor()),
-                        minHeight: 4,
-                      ),
-                    ),
                   ],
-                ),
+                ],
               ),
             ),
           ),
@@ -397,7 +415,7 @@ class _HomeState extends State<Home> {
     return (currentSpent / monthlyBudget * 100).clamp(0, 100);
   }
 
-  Color _getBudgetColor() {
+  Color _getBudgetColor() { 
     double percentage = _getBudgetPercentage();
     if (percentage >= 90) return Colors.red;
     if (percentage >= 70) return Colors.orange;

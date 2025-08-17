@@ -1,4 +1,4 @@
-// lib/screens/wallet.dart
+// lib/screens/wallet.dart - เพิ่ม Delete Transaction
 import 'package:flutter/material.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 import 'package:flowtrack/data/models/category.dart';
@@ -22,6 +22,10 @@ class _WalletScreenState extends State<WalletScreen> {
   void initState() {
     super.initState();
     _loadCategorySpending();
+
+    DatabaseService.transactionStream.listen((transactions) {
+      if (mounted) _loadCategorySpending();
+    });
   }
 
   Future<void> _loadCategorySpending() async {
@@ -31,28 +35,25 @@ class _WalletScreenState extends State<WalletScreen> {
 
     try {
       List<Transaction> transactions = [];
-      DateTime now = DateTime.now();
 
-      // Get transactions based on selected period
       switch (selectedPeriodIndex) {
-        case 0: // Day
+        case 0:
           transactions = today();
           break;
-        case 1: // Week
+        case 1:
           transactions = week();
           break;
-        case 2: // Month
+        case 2:
           transactions = month();
           break;
-        case 3: // Year
+        case 3:
           transactions = year();
           break;
-        case 4: // All Time
+        case 4:
           transactions = DatabaseService.getTransactions();
           break;
       }
 
-      // Group by category
       Map<String, CategorySpending> categoryMap = {};
 
       for (var transaction in transactions) {
@@ -76,7 +77,6 @@ class _WalletScreenState extends State<WalletScreen> {
         }
       }
 
-      // Convert to list and sort by amount (descending)
       categorySpendingList = categoryMap.values.toList();
       categorySpendingList
           .sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
@@ -93,7 +93,7 @@ class _WalletScreenState extends State<WalletScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadCategorySpending,
@@ -115,7 +115,7 @@ class _WalletScreenState extends State<WalletScreen> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
-        color: Color(0xFFFFC870),
+        color: Theme.of(context).primaryColor,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(20),
           bottomRight: Radius.circular(20),
@@ -123,22 +123,15 @@ class _WalletScreenState extends State<WalletScreen> {
       ),
       child: Column(
         children: [
-          Text(
-            'Wallet',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
+          Text('Wallet',
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white)),
           SizedBox(height: 8),
-          Text(
-            'Category Spending Analysis',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.white.withOpacity(0.9),
-            ),
-          ),
+          Text('Category Spending Analysis',
+              style: TextStyle(
+                  fontSize: 14, color: Colors.white.withOpacity(0.9))),
         ],
       ),
     );
@@ -164,18 +157,21 @@ class _WalletScreenState extends State<WalletScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
-                  color: isSelected ? Color(0xFFFFC870) : Colors.white,
+                  color: isSelected
+                      ? Theme.of(context).primaryColor
+                      : Colors.white,
                   boxShadow: [
                     if (isSelected)
                       BoxShadow(
-                        color: Color(0xFFFFC870).withOpacity(0.3),
+                        color: Theme.of(context).primaryColor.withOpacity(0.3),
                         blurRadius: 8,
                         offset: Offset(0, 2),
                       ),
                   ],
                   border: Border.all(
-                    color:
-                        isSelected ? Color(0xFFFFC870) : Colors.grey.shade300,
+                    color: isSelected
+                        ? Theme.of(context).primaryColor
+                        : Colors.grey.shade300,
                   ),
                 ),
                 child: Text(
@@ -216,10 +212,9 @@ class _WalletScreenState extends State<WalletScreen> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
+              color: Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, 2)),
         ],
       ),
       child: Row(
@@ -227,72 +222,40 @@ class _WalletScreenState extends State<WalletScreen> {
         children: [
           Column(
             children: [
-              Text(
-                'Total Spending',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14,
-                ),
-              ),
+              Text('Total Spending',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
               SizedBox(height: 4),
-              Text(
-                '\$${totalSpending.toStringAsFixed(2)}',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red.shade600,
-                ),
-              ),
+              Text('\$${totalSpending.toStringAsFixed(2)}',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.red.shade600)),
             ],
           ),
-          Container(
-            height: 40,
-            width: 1,
-            color: Colors.grey.shade300,
-          ),
+          Container(height: 40, width: 1, color: Colors.grey.shade300),
           Column(
             children: [
-              Text(
-                'Transactions',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14,
-                ),
-              ),
+              Text('Transactions',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
               SizedBox(height: 4),
-              Text(
-                '$totalTransactions',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue.shade600,
-                ),
-              ),
+              Text('$totalTransactions',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blue.shade600)),
             ],
           ),
-          Container(
-            height: 40,
-            width: 1,
-            color: Colors.grey.shade300,
-          ),
+          Container(height: 40, width: 1, color: Colors.grey.shade300),
           Column(
             children: [
-              Text(
-                'Categories',
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14,
-                ),
-              ),
+              Text('Categories',
+                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
               SizedBox(height: 4),
-              Text(
-                '${categorySpendingList.length}',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green.shade600,
-                ),
-              ),
+              Text('${categorySpendingList.length}',
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.green.shade600)),
             ],
           ),
         ],
@@ -312,23 +275,15 @@ class _WalletScreenState extends State<WalletScreen> {
           children: [
             Icon(Icons.wallet, size: 64, color: Colors.grey),
             SizedBox(height: 16),
-            Text(
-              'No spending data',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey,
-              ),
-            ),
+            Text('No spending data',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey)),
             SizedBox(height: 8),
-            Text(
-              'Add some transactions to see category breakdown',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
-              textAlign: TextAlign.center,
-            ),
+            Text('Add some transactions to see category breakdown',
+                style: TextStyle(fontSize: 14, color: Colors.grey),
+                textAlign: TextAlign.center),
           ],
         ),
       );
@@ -345,7 +300,6 @@ class _WalletScreenState extends State<WalletScreen> {
         final percentage = totalAmount > 0
             ? (categorySpending.totalAmount / totalAmount) * 100
             : 0;
-
         return _buildCategoryCard(categorySpending, percentage.toDouble());
       },
     );
@@ -369,7 +323,6 @@ class _WalletScreenState extends State<WalletScreen> {
             padding: EdgeInsets.all(16),
             child: Row(
               children: [
-                // Icon
                 Container(
                   width: 50,
                   height: 50,
@@ -378,18 +331,13 @@ class _WalletScreenState extends State<WalletScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: category.iconName != 'help'
-                      ? Image.asset(
-                          'images/${category.iconName}.png',
+                      ? Image.asset('images/${category.iconName}.png',
                           width: 30,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(Icons.category, color: color, size: 30);
-                          },
-                        )
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(Icons.category, color: color, size: 30))
                       : Icon(Icons.help, color: color, size: 30),
                 ),
                 SizedBox(width: 16),
-
-                // Category info
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -397,23 +345,17 @@ class _WalletScreenState extends State<WalletScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          Text(category.name,
+                              style: TextStyle(
+                                  fontSize: 16, fontWeight: FontWeight.w600)),
                           Text(
-                            category.name,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            '\$${categorySpending.totalAmount.toStringAsFixed(2)}',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: category.type == 'Expense'
-                                  ? Colors.red.shade600
-                                  : Colors.green.shade600,
-                            ),
-                          ),
+                              '\$${categorySpending.totalAmount.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: category.type == 'Expense'
+                                      ? Colors.red.shade600
+                                      : Colors.green.shade600)),
                         ],
                       ),
                       SizedBox(height: 4),
@@ -421,38 +363,29 @@ class _WalletScreenState extends State<WalletScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '${categorySpending.transactionCount} transactions',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                            ),
-                          ),
-                          Text(
-                            '${percentage.toStringAsFixed(1)}%',
-                            style: TextStyle(
-                              color: Colors.grey.shade600,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
+                              '${categorySpending.transactionCount} transactions',
+                              style: TextStyle(
+                                  color: Colors.grey.shade600, fontSize: 12)),
+                          Text('${percentage.toStringAsFixed(1)}%',
+                              style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500)),
                         ],
                       ),
                       SizedBox(height: 8),
-                      // Progress bar
                       Container(
                         height: 4,
                         decoration: BoxDecoration(
-                          color: Colors.grey.shade200,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
+                            color: Colors.grey.shade200,
+                            borderRadius: BorderRadius.circular(2)),
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
                           widthFactor: percentage / 100,
                           child: Container(
                             decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(2),
-                            ),
+                                color: color,
+                                borderRadius: BorderRadius.circular(2)),
                           ),
                         ),
                       ),
@@ -475,20 +408,25 @@ class _WalletScreenState extends State<WalletScreen> {
       builder: (context) => CategoryDetailsBottomSheet(
         categorySpending: categorySpending,
         period: periods[selectedPeriodIndex],
+        onTransactionDeleted: () {
+          _loadCategorySpending(); // Refresh data
+        },
       ),
     );
   }
 }
 
-// Category Details Bottom Sheet
+// Category Details Bottom Sheet with Delete Functionality
 class CategoryDetailsBottomSheet extends StatelessWidget {
   final CategorySpending categorySpending;
   final String period;
+  final VoidCallback onTransactionDeleted;
 
   const CategoryDetailsBottomSheet({
     Key? key,
     required this.categorySpending,
     required this.period,
+    required this.onTransactionDeleted,
   }) : super(key: key);
 
   @override
@@ -501,21 +439,17 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(25),
-          topRight: Radius.circular(25),
-        ),
+            topLeft: Radius.circular(25), topRight: Radius.circular(25)),
       ),
       child: Column(
         children: [
-          // Handle
           Container(
             margin: EdgeInsets.only(top: 12),
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              borderRadius: BorderRadius.circular(2),
-            ),
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2)),
           ),
 
           // Header
@@ -527,17 +461,13 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(15),
-                  ),
+                      color: color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(15)),
                   child: category.iconName != 'help'
-                      ? Image.asset(
-                          'images/${category.iconName}.png',
+                      ? Image.asset('images/${category.iconName}.png',
                           width: 40,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Icon(Icons.category, color: color, size: 40);
-                          },
-                        )
+                          errorBuilder: (context, error, stackTrace) =>
+                              Icon(Icons.category, color: color, size: 40))
                       : Icon(Icons.help, color: color, size: 40),
                 ),
                 SizedBox(width: 16),
@@ -545,43 +475,28 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        category.name,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '$period Period',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
+                      Text(category.name,
+                          style: TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold)),
+                      Text('$period Period',
+                          style: TextStyle(
+                              color: Colors.grey.shade600, fontSize: 14)),
                     ],
                   ),
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      '\$${categorySpending.totalAmount.toStringAsFixed(2)}',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: category.type == 'Expense'
-                            ? Colors.red.shade600
-                            : Colors.green.shade600,
-                      ),
-                    ),
-                    Text(
-                      '${categorySpending.transactionCount} transactions',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
+                    Text('\$${categorySpending.totalAmount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: category.type == 'Expense'
+                                ? Colors.red.shade600
+                                : Colors.green.shade600)),
+                    Text('${categorySpending.transactionCount} transactions',
+                        style: TextStyle(
+                            color: Colors.grey.shade600, fontSize: 12)),
                   ],
                 ),
               ],
@@ -590,14 +505,14 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
 
           Divider(height: 1),
 
-          // Transaction List
+          // Transaction List with Delete
           Expanded(
             child: ListView.builder(
               padding: EdgeInsets.symmetric(horizontal: 20),
               itemCount: categorySpending.transactions.length,
               itemBuilder: (context, index) {
                 final transaction = categorySpending.transactions[index];
-                return _buildTransactionItem(transaction);
+                return _buildTransactionItem(context, transaction);
               },
             ),
           ),
@@ -606,55 +521,101 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildTransactionItem(Transaction transaction) {
+  Widget _buildTransactionItem(BuildContext context, Transaction transaction) {
     final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-    return Container(
-      margin: EdgeInsets.only(bottom: 8),
-      padding: EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(10),
+    return Dismissible(
+      key: Key(transaction.id),
+      background: Container(
+        margin: EdgeInsets.only(bottom: 8),
+        decoration: BoxDecoration(
+            color: Colors.red, borderRadius: BorderRadius.circular(10)),
+        alignment: Alignment.centerRight,
+        padding: EdgeInsets.only(right: 20),
+        child: Icon(Icons.delete, color: Colors.white),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      direction: DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        return await showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Delete Transaction'),
+            content: Text(
+                'Are you sure you want to delete this transaction?\n\n"${transaction.description}"'),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: Text('Cancel')),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(context, true),
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                child: Text('Delete', style: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+        );
+      },
+      onDismissed: (direction) async {
+        try {
+          await DatabaseService.deleteTransaction(transaction.id);
+          onTransactionDeleted();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Transaction deleted'),
+                backgroundColor: Colors.green),
+          );
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+                content: Text('Error deleting transaction'),
+                backgroundColor: Colors.red),
+          );
+        }
+      },
+      child: Container(
+        margin: EdgeInsets.only(bottom: 8),
+        padding: EdgeInsets.all(12),
+        decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(10)),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(transaction.description,
+                      style:
+                          TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                  SizedBox(height: 4),
+                  Text(
+                      '${dayNames[transaction.datetime.weekday - 1]} ${transaction.datetime.day}/${transaction.datetime.month}/${transaction.datetime.year}',
+                      style:
+                          TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                ],
+              ),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(
-                  transaction.description,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                ),
-                SizedBox(height: 4),
-                Text(
-                  '${dayNames[transaction.datetime.weekday - 1]} ${transaction.datetime.day}/${transaction.datetime.month}/${transaction.datetime.year}',
-                  style: TextStyle(
-                    color: Colors.grey.shade600,
-                    fontSize: 12,
-                  ),
-                ),
+                Text(transaction.formattedAmount,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color:
+                            transaction.isIncome ? Colors.green : Colors.red)),
+                Text('Swipe to delete',
+                    style:
+                        TextStyle(color: Colors.grey.shade500, fontSize: 10)),
               ],
             ),
-          ),
-          Text(
-            transaction.formattedAmount,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-              color: transaction.isIncome ? Colors.green : Colors.red,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-// Data class for category spending
 class CategorySpending {
   final Category category;
   double totalAmount;

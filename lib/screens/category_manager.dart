@@ -1,4 +1,4 @@
-// lib/screens/category_manager.dart - แก้ไขปัญหาอัปเดตและ UI
+// lib/screens/category_manager.dart - เพิ่ม Reorder และ Stream Updates
 import 'package:flutter/material.dart';
 import 'package:flowtrack/data/models/category.dart';
 import 'package:flowtrack/data/services/database_services.dart';
@@ -11,7 +11,7 @@ class CategoryManagerScreen extends StatefulWidget {
 }
 
 class _CategoryManagerScreenState extends State<CategoryManagerScreen>
-    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Category> expenseCategories = [];
   List<Category> incomeCategories = [];
@@ -36,81 +36,49 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     'Food',
     'Coffee',
     'Grocery',
-    'Food-delivery',
-    'Gas-pump',
     'Public Transport',
-    'Rent or Mortgage',
-    'Water Bill',
-    'Electricity Bill',
-    'Internet Bill',
-    'Clothes',
-    'Shoes',
-    'Accessories',
-    'Personal Care Items',
     'Movie',
-    'Concert',
-    'Hobby',
-    'Travel',
-    'Health-Report',
-    'Doctor VisitsHospital',
-    'Education',
-    'Bank Fees',
     'Giftbox',
-    'Donation',
     'salary',
-    'commission',
     'freelanceincome',
     'dividends',
-    'interest',
-    'rentalincome',
-    'taxrefunds'
+    'Clothes',
+    'Health-Report'
   ];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _tabController = TabController(length: 2, vsync: this);
     _loadCategories();
+
+    DatabaseService.categoryStream.listen((categories) {
+      if (mounted) {
+        setState(() {
+          expenseCategories =
+              categories.where((cat) => cat.type == 'Expense').toList();
+          incomeCategories =
+              categories.where((cat) => cat.type == 'Income').toList();
+        });
+      }
+    });
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _loadCategories();
-    }
-  }
-
-  Future<void> _loadCategories() async {
-    if (!mounted) return;
+  void _loadCategories() {
     setState(() {
       isLoading = true;
     });
 
     try {
-      // ให้เวลา UI อัปเดต
-      await Future.delayed(Duration(milliseconds: 100));
-
-      final newExpenseCategories =
-          DatabaseService.getAllCategories(type: 'Expense');
-      final newIncomeCategories =
-          DatabaseService.getAllCategories(type: 'Income');
-
-      if (mounted) {
-        setState(() {
-          expenseCategories = newExpenseCategories;
-          incomeCategories = newIncomeCategories;
-          isLoading = false;
-        });
-      }
+      expenseCategories = DatabaseService.getAllCategories(type: 'Expense');
+      incomeCategories = DatabaseService.getAllCategories(type: 'Income');
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
-        _showSnackBar('Error loading categories: $e', Colors.red);
-      }
+      _showSnackBar('Error loading categories: $e', Colors.red);
     }
+
+    setState(() {
+      isLoading = false;
+    });
   }
 
   @override
@@ -118,16 +86,9 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     return Scaffold(
       backgroundColor: Colors.grey.shade50,
       appBar: AppBar(
-        title: const Text('Category Manager',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('Category Manager'),
         backgroundColor: const Color(0xFFFFC870),
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.refresh),
-            onPressed: _loadCategories,
-          ),
-        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
@@ -148,8 +109,8 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
           : TabBarView(
               controller: _tabController,
               children: [
-                _buildCategoryList(expenseCategories, 'Expense'),
-                _buildCategoryList(incomeCategories, 'Income'),
+                _buildReorderableList(expenseCategories, 'Expense'),
+                _buildReorderableList(incomeCategories, 'Income'),
               ],
             ),
       floatingActionButton: FloatingActionButton.extended(
@@ -161,7 +122,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     );
   }
 
-  Widget _buildCategoryList(List<Category> categories, String type) {
+  Widget _buildReorderableList(List<Category> categories, String type) {
     if (categories.isEmpty) {
       return Center(
         child: Column(
@@ -187,25 +148,27 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _loadCategories,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: categories.length,
-        itemBuilder: (context, index) => _buildCategoryCard(categories[index]),
-      ),
+    return ReorderableListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: categories.length,
+      onReorder: (oldIndex, newIndex) =>
+          _reorderCategories(categories, oldIndex, newIndex, type),
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        return _buildCategoryCard(category, index);
+      },
     );
   }
 
-  Widget _buildCategoryCard(Category category) {
+  Widget _buildCategoryCard(Category category, int index) {
     final color = Color(int.parse('0xFF${category.colorHex.substring(1)}'));
 
     return Card(
+      key: ValueKey(category.id),
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
-        contentPadding: EdgeInsets.all(16),
         leading: Container(
           width: 50,
           height: 50,
@@ -236,6 +199,8 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Icon(Icons.drag_handle, color: Colors.grey), // Reorder handle
+            SizedBox(width: 8),
             IconButton(
                 icon: const Icon(Icons.edit, color: Colors.blue),
                 onPressed: () => _showEditCategoryDialog(category)),
@@ -246,6 +211,26 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
         ),
       ),
     );
+  }
+
+  void _reorderCategories(List<Category> categories, int oldIndex, int newIndex,
+      String type) async {
+    if (newIndex > oldIndex) newIndex--;
+
+    final Category movedCategory = categories.removeAt(oldIndex);
+    categories.insert(newIndex, movedCategory);
+
+    // Update in database
+    try {
+      await DatabaseService.reorderCategories([
+        ...expenseCategories,
+        ...incomeCategories,
+      ]);
+      _showSnackBar('Categories reordered!', Colors.green);
+    } catch (e) {
+      _showSnackBar('Error reordering categories: $e', Colors.red);
+      _loadCategories(); // Reload if error
+    }
   }
 
   void _showAddCategoryDialog() {
@@ -278,7 +263,6 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // ชื่อหมวดหมู่
                 TextField(
                   controller: nameController,
                   decoration: InputDecoration(
@@ -292,8 +276,6 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                   ),
                 ),
                 const SizedBox(height: 16),
-
-                // งบประมาณ (สำหรับรายจ่าย)
                 if (type == 'Expense') ...[
                   TextField(
                     controller: budgetController,
@@ -307,8 +289,6 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                   ),
                   const SizedBox(height: 16),
                 ],
-
-                // เลือกสี
                 Text('Select Color:',
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
@@ -339,8 +319,6 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                   }).toList(),
                 ),
                 const SizedBox(height: 16),
-
-                // เลือกไอคอน
                 Text('Select Icon:',
                     style: TextStyle(fontWeight: FontWeight.bold)),
                 const SizedBox(height: 8),
@@ -451,7 +429,6 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
       }
 
       Navigator.pop(context);
-      await _loadCategories(); // Force reload
     } catch (e) {
       _showSnackBar('Error: ${e.toString()}', Colors.red);
     }
@@ -485,7 +462,6 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     try {
       await DatabaseService.deleteCategory(category.id);
       _showSnackBar('Category deleted!', Colors.green);
-      await _loadCategories();
     } catch (e) {
       _showSnackBar('Error: ${e.toString()}', Colors.red);
     }
@@ -504,7 +480,6 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _tabController.dispose();
     super.dispose();
   }

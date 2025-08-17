@@ -205,13 +205,12 @@ class _Add_ScreenState extends State<Add_Screen> {
   GestureDetector save() {
     return GestureDetector(
       onTap: () async {
-        // เช็คว่าข้อมูลครับหรือยัง
         if (selectedCategory == null ||
             amount_c.text.isEmpty ||
             expalin_C.text.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('กรุณากรอกข้อมูลให้ครบถ้วน'),
+                content: Text('Please fill in all required fields'),
               backgroundColor: Colors.red,
             ),
           );
@@ -243,7 +242,7 @@ class _Add_ScreenState extends State<Add_Screen> {
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('เกิดข้อผิดพลาด: $e'),
+                content: Text('An error occurred: $e'),
               backgroundColor: Colors.red,
             ),
           );
