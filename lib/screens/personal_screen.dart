@@ -489,7 +489,7 @@ class _PersonalScreenState extends State<PersonalScreen>
               ),
             ],
           ),
-          SizedBox(height: 8),
+          SizedBox(height: 16),
           Text(
             'Version 1.0.0',
             style: TextStyle(
@@ -497,6 +497,7 @@ class _PersonalScreenState extends State<PersonalScreen>
               color: themeProvider.subtitleColor.withOpacity(0.7),
             ),
           ),
+          SizedBox(height: 16),
         ],
       ),
     );

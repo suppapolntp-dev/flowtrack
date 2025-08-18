@@ -1,4 +1,4 @@
-// lib/screens/category_manager.dart - Updated with Theme Support
+// lib/screens/category_manager.dart - Updated with Improved UI
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/providers/theme_provider.dart';
@@ -18,6 +18,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
   List<Category> expenseCategories = [];
   List<Category> incomeCategories = [];
   bool isLoading = false;
+  bool isReorderMode = false; // เพิ่มโหมดการจัดเรียง
 
   final List<Color> availableColors = [
     const Color(0xFFFF6B6B),
@@ -113,6 +114,25 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
         title: const Text('Category Manager'),
         backgroundColor: themeProvider.primaryColor,
         elevation: 0,
+        actions: [
+          // ปุ่มสลับโหมดจัดเรียง
+          IconButton(
+            icon: Icon(
+              isReorderMode ? Icons.done : Icons.reorder,
+              color: Colors.white,
+            ),
+            onPressed: () {
+              setState(() {
+                isReorderMode = !isReorderMode;
+              });
+              if (!isReorderMode) {
+                _showSnackBar('Reorder mode disabled', Colors.blue);
+              } else {
+                _showSnackBar('Drag items to reorder', Colors.blue);
+              }
+            },
+          ),
+        ],
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
@@ -137,8 +157,8 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
           : TabBarView(
               controller: _tabController,
               children: [
-                _buildReorderableList(expenseCategories, 'Expense'),
-                _buildReorderableList(incomeCategories, 'Income'),
+                _buildCategoryList(expenseCategories, 'Expense'),
+                _buildCategoryList(incomeCategories, 'Income'),
               ],
             ),
       floatingActionButton: FloatingActionButton.extended(
@@ -150,7 +170,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     );
   }
 
-  Widget _buildReorderableList(List<Category> categories, String type) {
+  Widget _buildCategoryList(List<Category> categories, String type) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     if (categories.isEmpty) {
@@ -178,15 +198,103 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
       );
     }
 
-    return ReorderableListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: categories.length,
-      onReorder: (oldIndex, newIndex) =>
-          _reorderCategories(categories, oldIndex, newIndex, type),
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        return _buildCategoryCard(category, index);
-      },
+    if (isReorderMode) {
+      // โหมดจัดเรียง
+      return ReorderableListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: categories.length,
+        onReorder: (oldIndex, newIndex) =>
+            _reorderCategories(categories, oldIndex, newIndex, type),
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          return _buildReorderableCard(category, index);
+        },
+      );
+    } else {
+      // โหมดปกติ
+      return ListView.builder(
+        padding: const EdgeInsets.all(16),
+        itemCount: categories.length,
+        itemBuilder: (context, index) {
+          final category = categories[index];
+          return _buildCategoryCard(category, index);
+        },
+      );
+    }
+  }
+
+  Widget _buildReorderableCard(Category category, int index) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final color = Color(int.parse('0xFF${category.colorHex.substring(1)}'));
+
+    return Card(
+      key: ValueKey(category.id),
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 3,
+      color: themeProvider.cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        padding: EdgeInsets.all(16),
+        child: Row(
+          children: [
+            // Drag Handle
+            Icon(
+              Icons.drag_indicator,
+              color: themeProvider.primaryColor,
+              size: 28,
+            ),
+            SizedBox(width: 12),
+            // Icon
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Center(
+                child: Image.asset('images/${category.iconName}.png',
+                    width: 30,
+                    height: 30,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.category, color: color, size: 24)),
+              ),
+            ),
+            SizedBox(width: 16),
+            // Name and Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(category.name,
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: themeProvider.textColor)),
+                  SizedBox(height: 4),
+                  Text(category.type,
+                      style: TextStyle(color: themeProvider.subtitleColor)),
+                  if (category.budgetLimit != null) ...[
+                    SizedBox(height: 4),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.green.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        'Budget: \฿${category.budgetLimit!.toStringAsFixed(0)}',
+                        style:
+                            TextStyle(color: Colors.green[600], fontSize: 11),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -195,57 +303,135 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     final color = Color(int.parse('0xFF${category.colorHex.substring(1)}'));
 
     return Card(
-      key: ValueKey(category.id),
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
       color: themeProvider.cardColor,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: ListTile(
-        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Center(
-            child: Image.asset('images/${category.iconName}.png',
-                width: 30,
-                height: 30,
-                errorBuilder: (context, error, stackTrace) =>
-                    Icon(Icons.category, color: color, size: 24)),
-          ),
-        ),
-        title: Text(category.name,
-            style: TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-                color: themeProvider.textColor)),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        padding: EdgeInsets.all(12),
+        child: Row(
           children: [
-            SizedBox(height: 4),
-            Text(category.type,
-                style: TextStyle(color: themeProvider.subtitleColor)),
-            if (category.budgetLimit != null) ...[
-              SizedBox(height: 4),
-              Text('Budget: \฿${category.budgetLimit!.toStringAsFixed(2)}',
-                  style: TextStyle(color: Colors.green[600], fontSize: 12)),
-            ],
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.drag_handle, color: themeProvider.subtitleColor),
-            SizedBox(width: 8),
-            IconButton(
-                icon: Icon(Icons.edit, color: Colors.blue),
-                onPressed: () => _showEditCategoryDialog(category)),
-            IconButton(
-                icon: Icon(Icons.delete, color: Colors.red),
-                onPressed: () => _showDeleteConfirmation(category)),
+            // Category Icon
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    color.withOpacity(0.2),
+                    color.withOpacity(0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: color.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Center(
+                child: Image.asset('images/${category.iconName}.png',
+                    width: 32,
+                    height: 32,
+                    errorBuilder: (context, error, stackTrace) =>
+                        Icon(Icons.category, color: color, size: 28)),
+              ),
+            ),
+            SizedBox(width: 12),
+
+            // Category Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(category.name,
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                          color: themeProvider.textColor)),
+                  SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding:
+                            EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          category.type,
+                          style: TextStyle(
+                            color: themeProvider.primaryColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      if (category.budgetLimit != null) ...[
+                        SizedBox(width: 8),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '\฿${category.budgetLimit!.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            // Action Buttons with spacing
+            Container(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Edit Button
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.edit_rounded, size: 20),
+                      color: Colors.blue,
+                      onPressed: () => _showEditCategoryDialog(category),
+                      constraints: BoxConstraints(minWidth: 40, minHeight: 40),
+                      padding: EdgeInsets.all(8),
+                    ),
+                  ),
+                  SizedBox(width: 8),
+
+                  // Delete Button
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: IconButton(
+                      icon: Icon(Icons.delete_rounded, size: 20),
+                      color: Colors.red,
+                      onPressed: () => _showDeleteConfirmation(category),
+                      constraints: BoxConstraints(minWidth: 40, minHeight: 40),
+                      padding: EdgeInsets.all(8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -297,9 +483,27 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: themeProvider.cardColor,
-          title: Text(
-            isEditing ? 'Edit Category' : 'Add New Category',
-            style: TextStyle(color: themeProvider.textColor),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  isEditing ? Icons.edit : Icons.add_circle,
+                  color: themeProvider.primaryColor,
+                ),
+              ),
+              SizedBox(width: 12),
+              Text(
+                isEditing ? 'Edit Category' : 'Add New Category',
+                style: TextStyle(color: themeProvider.textColor),
+              ),
+            ],
           ),
           content: Container(
             width: double.maxFinite,
@@ -313,15 +517,17 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                     decoration: InputDecoration(
                       labelText: 'Category Name *',
                       labelStyle: TextStyle(color: themeProvider.subtitleColor),
+                      prefixIcon:
+                          Icon(Icons.label, color: themeProvider.primaryColor),
                       border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                          borderRadius: BorderRadius.circular(12)),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide:
                             BorderSide(color: themeProvider.dividerColor),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: selectedColor, width: 2),
                       ),
                       filled: true,
@@ -338,15 +544,17 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                         labelText: 'Budget Limit (Optional)',
                         labelStyle:
                             TextStyle(color: themeProvider.subtitleColor),
+                        prefixIcon: Icon(Icons.account_balance_wallet,
+                            color: themeProvider.primaryColor),
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
+                            borderRadius: BorderRadius.circular(12)),
                         enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide:
                               BorderSide(color: themeProvider.dividerColor),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide:
                               BorderSide(color: selectedColor, width: 2),
                         ),
@@ -358,92 +566,141 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                     ),
                     const SizedBox(height: 16),
                   ],
-                  Text('Select Color:',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: themeProvider.textColor)),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    children: availableColors.map((color) {
-                      final isSelected = selectedColor.value == color.value;
-                      return GestureDetector(
-                        onTap: () =>
-                            setDialogState(() => selectedColor = color),
-                        child: Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: color,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: isSelected
-                                  ? themeProvider.textColor
-                                  : themeProvider.dividerColor,
-                              width: isSelected ? 3 : 1,
-                            ),
-                          ),
-                          child: isSelected
-                              ? Icon(Icons.check, color: Colors.white, size: 20)
-                              : null,
+
+                  // Color Selection
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: themeProvider.backgroundColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: themeProvider.dividerColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.palette,
+                                color: themeProvider.primaryColor, size: 20),
+                            SizedBox(width: 8),
+                            Text('Select Color',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: themeProvider.textColor)),
+                          ],
                         ),
-                      );
-                    }).toList(),
+                        const SizedBox(height: 12),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: availableColors.map((color) {
+                            final isSelected =
+                                selectedColor.value == color.value;
+                            return GestureDetector(
+                              onTap: () =>
+                                  setDialogState(() => selectedColor = color),
+                              child: Container(
+                                width: 42,
+                                height: 42,
+                                decoration: BoxDecoration(
+                                  color: color,
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? themeProvider.textColor
+                                        : Colors.transparent,
+                                    width: isSelected ? 3 : 0,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: color.withOpacity(0.4),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: isSelected
+                                    ? Icon(Icons.check,
+                                        color: Colors.white, size: 20)
+                                    : null,
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 16),
-                  Text('Select Icon:',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: themeProvider.textColor)),
-                  const SizedBox(height: 8),
-                  Container(
-                    height: 120,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: themeProvider.dividerColor),
-                      borderRadius: BorderRadius.circular(8),
-                      color: themeProvider.backgroundColor,
-                    ),
-                    child: GridView.builder(
-                      padding: EdgeInsets.all(8),
-                      gridDelegate:
-                          const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 6,
-                        crossAxisSpacing: 4,
-                        mainAxisSpacing: 4,
-                      ),
-                      itemCount: availableIcons.length,
-                      itemBuilder: (context, index) {
-                        final icon = availableIcons[index];
-                        final isSelected = selectedIcon == icon;
 
-                        return GestureDetector(
-                          onTap: () =>
-                              setDialogState(() => selectedIcon = icon),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: isSelected
-                                    ? selectedColor
-                                    : themeProvider.dividerColor,
-                                width: isSelected ? 2 : 1,
-                              ),
-                              borderRadius: BorderRadius.circular(6),
-                              color: isSelected
-                                  ? selectedColor.withOpacity(0.1)
-                                  : null,
+                  // Icon Selection
+                  Container(
+                    padding: EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: themeProvider.backgroundColor,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: themeProvider.dividerColor),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.category,
+                                color: themeProvider.primaryColor, size: 20),
+                            SizedBox(width: 8),
+                            Text('Select Icon',
+                                style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: themeProvider.textColor)),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Container(
+                          height: 140,
+                          child: GridView.builder(
+                            padding: EdgeInsets.all(4),
+                            gridDelegate:
+                                const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 6,
+                              crossAxisSpacing: 8,
+                              mainAxisSpacing: 8,
                             ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(2),
-                              child: Image.asset('images/$icon.png',
-                                  width: 16,
-                                  height: 16,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      Icon(Icons.category,
-                                          color: selectedColor, size: 16)),
-                            ),
+                            itemCount: availableIcons.length,
+                            itemBuilder: (context, index) {
+                              final icon = availableIcons[index];
+                              final isSelected = selectedIcon == icon;
+
+                              return GestureDetector(
+                                onTap: () =>
+                                    setDialogState(() => selectedIcon = icon),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? selectedColor
+                                          : themeProvider.dividerColor,
+                                      width: isSelected ? 2 : 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                    color: isSelected
+                                        ? selectedColor.withOpacity(0.1)
+                                        : themeProvider.cardColor,
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4),
+                                    child: Image.asset('images/$icon.png',
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                Icon(Icons.category,
+                                                    color: selectedColor,
+                                                    size: 20)),
+                                  ),
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      },
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -459,9 +716,15 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
               onPressed: () => _saveCategory(category, nameController.text,
                   selectedIcon, selectedColor, type, budgetController.text),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor),
-              child: Text(isEditing ? 'Update' : 'Add',
-                  style: TextStyle(color: Colors.white)),
+                  backgroundColor: themeProvider.primaryColor,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10))),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Text(isEditing ? 'Update' : 'Add',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w600)),
+              ),
             ),
           ],
         ),
@@ -520,8 +783,22 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: themeProvider.cardColor,
-        title: Text('Delete Category',
-            style: TextStyle(color: themeProvider.textColor)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.delete, color: Colors.red),
+            ),
+            SizedBox(width: 12),
+            Text('Delete Category',
+                style: TextStyle(color: themeProvider.textColor)),
+          ],
+        ),
         content: Text(
             'Delete "${category.name}"?\n\nCategories with transactions cannot be deleted.',
             style: TextStyle(color: themeProvider.textColor)),
@@ -535,7 +812,10 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
               Navigator.pop(context);
               await _deleteCategory(category);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10))),
             child: const Text('Delete', style: TextStyle(color: Colors.white)),
           ),
         ],

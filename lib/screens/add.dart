@@ -15,7 +15,7 @@ class Add_Screen extends StatefulWidget {
 
 class _Add_ScreenState extends State<Add_Screen> {
   DateTime date = DateTime.now();
-  Category? selectedCategory;
+  Category? selectedCategory; // ตัวแปรนี้ใช้เก็บหมวดหมู่ที่ถูกเลือกใน Dropdown
   String selectedType = "Expense"; // เริ่มต้นเป็น Expense
   final TextEditingController expalin_C = TextEditingController();
   FocusNode ex = FocusNode();

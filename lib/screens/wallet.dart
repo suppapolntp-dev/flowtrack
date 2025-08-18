@@ -1,4 +1,4 @@
-// lib/screens/wallet.dart - Updated with Theme Support
+// lib/screens/wallet.dart - Updated with Advanced Sorting
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/providers/theme_provider.dart';
@@ -19,6 +19,33 @@ class _WalletScreenState extends State<WalletScreen> {
   List<String> periods = ['Day', 'Week', 'Month', 'Year', 'All Time'];
   List<CategorySpending> categorySpendingList = [];
   bool isLoading = false;
+
+  // เพิ่มตัวแปรสำหรับการเรียงลำดับ
+  String sortType = 'amount_desc';
+  final List<Map<String, dynamic>> sortOptions = [
+    {
+      'value': 'amount_desc',
+      'label': 'Highest Spending',
+      'icon': Icons.trending_up
+    },
+    {
+      'value': 'amount_asc',
+      'label': 'Lowest Spending',
+      'icon': Icons.trending_down
+    },
+    {
+      'value': 'trans_desc',
+      'label': 'Most Transactions',
+      'icon': Icons.receipt_long
+    },
+    {
+      'value': 'trans_asc',
+      'label': 'Least Transactions',
+      'icon': Icons.receipt
+    },
+    {'value': 'name_asc', 'label': 'Name (A-Z)', 'icon': Icons.sort_by_alpha},
+    {'value': 'name_desc', 'label': 'Name (Z-A)', 'icon': Icons.sort},
+  ];
 
   @override
   void initState() {
@@ -80,8 +107,7 @@ class _WalletScreenState extends State<WalletScreen> {
       }
 
       categorySpendingList = categoryMap.values.toList();
-      categorySpendingList
-          .sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+      _sortCategories(); // เรียงลำดับตาม sortType
     } catch (e) {
       print('Error loading category spending: $e');
       categorySpendingList = [];
@@ -90,6 +116,132 @@ class _WalletScreenState extends State<WalletScreen> {
     setState(() {
       isLoading = false;
     });
+  }
+
+  void _sortCategories() {
+    switch (sortType) {
+      case 'amount_desc':
+        categorySpendingList
+            .sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
+        break;
+      case 'amount_asc':
+        categorySpendingList
+            .sort((a, b) => a.totalAmount.compareTo(b.totalAmount));
+        break;
+      case 'trans_desc':
+        categorySpendingList
+            .sort((a, b) => b.transactionCount.compareTo(a.transactionCount));
+        break;
+      case 'trans_asc':
+        categorySpendingList
+            .sort((a, b) => a.transactionCount.compareTo(b.transactionCount));
+        break;
+      case 'name_asc':
+        categorySpendingList
+            .sort((a, b) => a.category.name.compareTo(b.category.name));
+        break;
+      case 'name_desc':
+        categorySpendingList
+            .sort((a, b) => b.category.name.compareTo(a.category.name));
+        break;
+    }
+  }
+
+  void _showSortOptions() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: themeProvider.cardColor,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: themeProvider.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Sort Categories',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: themeProvider.textColor,
+                  ),
+                ),
+              ),
+              Divider(color: themeProvider.dividerColor),
+              Container(
+                constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.5),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: sortOptions
+                        .map((option) => ListTile(
+                              leading: Container(
+                                padding: EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: sortType == option['value']
+                                      ? themeProvider.primaryColor
+                                          .withOpacity(0.1)
+                                      : themeProvider.backgroundColor,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  option['icon'],
+                                  color: sortType == option['value']
+                                      ? themeProvider.primaryColor
+                                      : themeProvider.subtitleColor,
+                                ),
+                              ),
+                              title: Text(
+                                option['label'],
+                                style: TextStyle(
+                                  color: sortType == option['value']
+                                      ? themeProvider.primaryColor
+                                      : themeProvider.textColor,
+                                  fontWeight: sortType == option['value']
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                ),
+                              ),
+                              trailing: sortType == option['value']
+                                  ? Icon(Icons.check_circle,
+                                      color: themeProvider.primaryColor)
+                                  : null,
+                              onTap: () {
+                                setState(() {
+                                  sortType = option['value'];
+                                  _sortCategories();
+                                });
+                                Navigator.pop(context);
+                              },
+                            ))
+                        .toList(),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -105,6 +257,7 @@ class _WalletScreenState extends State<WalletScreen> {
             children: [
               _buildHeader(),
               _buildPeriodSelector(),
+              _buildSortingBar(),
               _buildTotalSummary(),
               Expanded(child: _buildCategoryList()),
             ],
@@ -206,6 +359,72 @@ class _WalletScreenState extends State<WalletScreen> {
     );
   }
 
+  Widget _buildSortingBar() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            'Categories',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: themeProvider.textColor,
+            ),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: _showSortOptions,
+              child: Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  border: Border.all(
+                    color: themeProvider.primaryColor.withOpacity(0.5),
+                    width: 1,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  color: themeProvider.primaryColor.withOpacity(0.1),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      sortOptions.firstWhere(
+                          (opt) => opt['value'] == sortType)['icon'],
+                      size: 16,
+                      color: themeProvider.primaryColor,
+                    ),
+                    SizedBox(width: 6),
+                    Text(
+                      sortOptions.firstWhere(
+                          (opt) => opt['value'] == sortType)['label'],
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: themeProvider.primaryColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_drop_down,
+                      size: 18,
+                      color: themeProvider.primaryColor,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTotalSummary() {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
@@ -226,7 +445,7 @@ class _WalletScreenState extends State<WalletScreen> {
         0, (sum, item) => sum + item.transactionCount);
 
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.all(16),
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: themeProvider.cardColor,
@@ -445,14 +664,14 @@ class _WalletScreenState extends State<WalletScreen> {
         categorySpending: categorySpending,
         period: periods[selectedPeriodIndex],
         onTransactionDeleted: () {
-          _loadCategorySpending(); // Refresh data
+          _loadCategorySpending();
         },
       ),
     );
   }
 }
 
-// Category Details Bottom Sheet with Delete Functionality
+// CategoryDetailsBottomSheet และ CategorySpending class คงเดิม
 class CategoryDetailsBottomSheet extends StatelessWidget {
   final CategorySpending categorySpending;
   final String period;
@@ -488,8 +707,6 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                 color: themeProvider.dividerColor,
                 borderRadius: BorderRadius.circular(2)),
           ),
-
-          // Header
           Container(
             padding: EdgeInsets.all(20),
             child: Row(
@@ -542,10 +759,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
               ],
             ),
           ),
-
           Divider(height: 1, color: themeProvider.dividerColor),
-
-          // Transaction List with Delete
           Expanded(
             child: ListView.builder(
               padding: EdgeInsets.symmetric(horizontal: 20),

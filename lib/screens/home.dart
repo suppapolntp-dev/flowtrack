@@ -1,4 +1,4 @@
-// lib/screens/home.dart - Updated with Username Display
+// lib/screens/home.dart - Updated with See All navigation
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/providers/theme_provider.dart';
@@ -8,7 +8,8 @@ import 'package:flowtrack/data/models/transaction.dart';
 import 'package:flowtrack/data/utlity.dart';
 
 class Home extends StatefulWidget {
-  const Home({super.key});
+  final Function(int)? onNavigateToWallet; // เพิ่ม callback
+  const Home({super.key, this.onNavigateToWallet});
 
   @override
   State<Home> createState() => _HomeState();
@@ -18,7 +19,7 @@ class _HomeState extends State<Home> {
   List<Transaction> transactions = [];
   double monthlyBudget = 0;
   double currentSpent = 0;
-  String userName = 'Loading...'; // เพิ่มตัวแปรสำหรับเก็บชื่อ
+  String userName = 'Loading...';
 
   final List<String> day = [
     'Monday',
@@ -34,14 +35,13 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     _loadData();
-    _loadUserName(); // เพิ่มการโหลดชื่อผู้ใช้
+    _loadUserName();
 
     DatabaseService.transactionStream.listen((transactions) {
       if (mounted) _loadData();
     });
   }
 
-  // เพิ่ม method สำหรับโหลดชื่อผู้ใช้
   Future<void> _loadUserName() async {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -98,14 +98,14 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
             await _loadData();
-            await _loadUserName(); // รีโหลดชื่อด้วยเมื่อ refresh
+            await _loadUserName();
           },
           child: CustomScrollView(
             slivers: [
@@ -119,16 +119,52 @@ class _HomeState extends State<Home> {
                     children: [
                       Text('Transactions History',
                           style: TextStyle(
-                              fontWeight: FontWeight.w600, 
+                              fontWeight: FontWeight.w600,
                               fontSize: 16,
                               color: themeProvider.textColor)),
-                      GestureDetector(
-                        onTap: () {},
-                        child: Text('See All',
-                            style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 16,
-                                color: themeProvider.subtitleColor)),
+                      // ปรับปุ่ม See All ให้สวยขึ้น
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: () {
+                            // เรียก callback เพื่อไปหน้า Wallet
+                            if (widget.onNavigateToWallet != null) {
+                              widget
+                                  .onNavigateToWallet!(2); // index 2 คือ Wallet
+                            }
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color:
+                                    themeProvider.primaryColor.withOpacity(0.5),
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              color:
+                                  themeProvider.primaryColor.withOpacity(0.1),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('See All',
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                        fontSize: 14,
+                                        color: themeProvider.primaryColor)),
+                                SizedBox(width: 4),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 12,
+                                  color: themeProvider.primaryColor,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -138,12 +174,13 @@ class _HomeState extends State<Home> {
               transactions.isEmpty
                   ? SliverToBoxAdapter(
                       child: Container(
-                        height: 200,
+                        height: 20,
                         child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.inbox, size: 64, color: themeProvider.subtitleColor),
+                              Icon(Icons.inbox,
+                                  size: 64, color: themeProvider.subtitleColor),
                               SizedBox(height: 16),
                               Text('No transactions yet',
                                   style: TextStyle(
@@ -152,7 +189,8 @@ class _HomeState extends State<Home> {
                                       fontWeight: FontWeight.w500)),
                               Text('Add your first transaction to get started',
                                   style: TextStyle(
-                                      fontSize: 14, color: themeProvider.subtitleColor)),
+                                      fontSize: 14,
+                                      color: themeProvider.subtitleColor)),
                             ],
                           ),
                         ),
@@ -164,7 +202,7 @@ class _HomeState extends State<Home> {
                         childCount: transactions.length,
                       ),
                     ),
-              SliverToBoxAdapter(child: SizedBox(height: 100)),
+              SliverToBoxAdapter(child: SizedBox(height: 20)),
             ],
           ),
         ),
@@ -203,18 +241,19 @@ class _HomeState extends State<Home> {
           width: 40,
           height: 40,
           child: Image.asset('images/$iconName.png',
-              errorBuilder: (context, error, stackTrace) =>
-                  Icon(Icons.help, size: 40, color: themeProvider.subtitleColor)),
+              errorBuilder: (context, error, stackTrace) => Icon(Icons.help,
+                  size: 40, color: themeProvider.subtitleColor)),
         ),
       ),
       title: Text(transaction.description,
           style: TextStyle(
-            fontSize: 17, 
-            fontWeight: FontWeight.w600,
-            color: themeProvider.textColor)),
+              fontSize: 17,
+              fontWeight: FontWeight.w600,
+              color: themeProvider.textColor)),
       subtitle: Text(
         '${category?.name ?? 'Unknown'} • ${day[transaction.datetime.weekday - 1]}  ${transaction.datetime.year}-${transaction.datetime.day}-${transaction.datetime.month}',
-        style: TextStyle(fontWeight: FontWeight.w600, color: themeProvider.subtitleColor),
+        style: TextStyle(
+            fontWeight: FontWeight.w600, color: themeProvider.subtitleColor),
       ),
       trailing: Text(transaction.formattedAmount,
           style: TextStyle(
@@ -226,7 +265,7 @@ class _HomeState extends State<Home> {
 
   Widget _head() {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Column(
       children: [
         // Header Background
@@ -256,12 +295,10 @@ class _HomeState extends State<Home> {
                                 fontSize: 24,
                                 color: Colors.white)),
                         SizedBox(height: 4),
-                        // แสดงชื่อผู้ใช้ที่โหลดมา
                         Row(
                           children: [
-                            Icon(Icons.person, 
-                                color: Colors.white.withOpacity(0.9), 
-                                size: 14),
+                            Icon(Icons.person,
+                                color: Colors.white.withOpacity(0.9), size: 14),
                             SizedBox(width: 4),
                             Text(userName,
                                 style: TextStyle(
@@ -272,9 +309,8 @@ class _HomeState extends State<Home> {
                         ),
                       ],
                     ),
-                    // เพิ่มปุ่ม refresh ชื่อ
                     IconButton(
-                      icon: Icon(Icons.refresh, 
+                      icon: Icon(Icons.refresh,
                           color: Colors.white.withOpacity(0.8)),
                       onPressed: () async {
                         await _loadUserName();
@@ -290,7 +326,6 @@ class _HomeState extends State<Home> {
                   ],
                 ),
                 SizedBox(height: 10),
-                // เพิ่มข้อความต้อนรับ
                 Text(
                   _getGreeting(),
                   style: TextStyle(
@@ -317,7 +352,9 @@ class _HomeState extends State<Home> {
                   decoration: BoxDecoration(
                     boxShadow: [
                       BoxShadow(
-                            color: Color.lerp(themeProvider.primaryColor, Colors.black, 0.25) ?? themeProvider.primaryColor,
+                          color: Color.lerp(themeProvider.primaryColor,
+                                  Colors.black, 0.25) ??
+                              themeProvider.primaryColor,
                           offset: Offset(0, 4),
                           blurRadius: 8,
                           spreadRadius: 1)
@@ -340,8 +377,6 @@ class _HomeState extends State<Home> {
                               fontSize: 28,
                               color: Colors.white)),
                       SizedBox(height: 20),
-
-                      // Income/Expense Row
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
@@ -415,7 +450,6 @@ class _HomeState extends State<Home> {
                   ),
                 ),
 
-                // Budget Card
                 if (monthlyBudget > 0) ...[
                   SizedBox(height: 15),
                   Container(
@@ -428,8 +462,8 @@ class _HomeState extends State<Home> {
                           Border.all(color: _getBudgetColor().withOpacity(0.3)),
                       boxShadow: [
                         BoxShadow(
-                            color: themeProvider.isDarkMode 
-                                ? Colors.black26 
+                            color: themeProvider.isDarkMode
+                                ? Colors.black26
                                 : Colors.grey.withOpacity(0.1),
                             blurRadius: 8,
                             offset: Offset(0, 2))
@@ -460,13 +494,13 @@ class _HomeState extends State<Home> {
                               Text(
                                   '${_getBudgetPercentage().toStringAsFixed(0)}% used • \฿${(currentSpent).toStringAsFixed(0)} / \฿${(monthlyBudget).toStringAsFixed(0)}',
                                   style: TextStyle(
-                                      fontSize: 12, 
+                                      fontSize: 12,
                                       color: themeProvider.subtitleColor)),
                             ],
                           ),
                         ),
                         SizedBox(
-                          width: 50,
+                          width: 75,
                           child: LinearProgressIndicator(
                             value: _getBudgetPercentage() / 100,
                             backgroundColor: themeProvider.dividerColor,
@@ -487,7 +521,6 @@ class _HomeState extends State<Home> {
     );
   }
 
-  // เพิ่ม method สำหรับแสดงคำทักทายตามเวลา
   String _getGreeting() {
     var hour = DateTime.now().hour;
     if (hour < 12) {
@@ -504,7 +537,7 @@ class _HomeState extends State<Home> {
     return (currentSpent / monthlyBudget * 100).clamp(0, 100);
   }
 
-  Color _getBudgetColor() { 
+  Color _getBudgetColor() {
     double percentage = _getBudgetPercentage();
     if (percentage >= 90) return Colors.red;
     if (percentage >= 70) return Colors.orange;

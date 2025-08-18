@@ -1,4 +1,4 @@
-// lib/screens/statistics.dart - Updated with Theme Support
+// lib/screens/statistics.dart - Updated with Advanced Sorting
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/providers/theme_provider.dart';
@@ -21,6 +21,15 @@ class _StatisticsState extends State<Statistics> {
   List<List<Transaction>> f = [];
   List<Transaction> a = [];
   int index_color = 0;
+  
+  // เพิ่มตัวแปรสำหรับการเรียงลำดับ
+  String sortType = 'amount_desc'; // ค่าเริ่มต้น: ใช้มากสุดไปน้อยสุด
+  final List<Map<String, dynamic>> sortOptions = [
+    {'value': 'amount_desc', 'label': 'Highest Amount', 'icon': Icons.arrow_downward},
+    {'value': 'amount_asc', 'label': 'Lowest Amount', 'icon': Icons.arrow_upward},
+    {'value': 'date_desc', 'label': 'Most Recent', 'icon': Icons.calendar_today},
+    {'value': 'date_asc', 'label': 'Oldest First', 'icon': Icons.history},
+  ];
 
   @override
   void initState() {
@@ -32,9 +41,9 @@ class _StatisticsState extends State<Statistics> {
     try {
       setState(() {
         f = [today(), week(), month(), year()];
-        // เลือกข้อมูลตาม index_color
         if (f.isNotEmpty && index_color < f.length) {
-          a = f[index_color];
+          a = List.from(f[index_color]); // สร้าง copy เพื่อไม่ให้กระทบข้อมูลต้นฉบับ
+          _sortTransactions(); // เรียงลำดับตาม sortType ปัจจุบัน
         } else {
           a = [];
         }
@@ -46,6 +55,108 @@ class _StatisticsState extends State<Statistics> {
         a = [];
       });
     }
+  }
+
+  void _sortTransactions() {
+    switch (sortType) {
+      case 'amount_desc':
+        a.sort((a, b) => b.amount.compareTo(a.amount));
+        break;
+      case 'amount_asc':
+        a.sort((a, b) => a.amount.compareTo(b.amount));
+        break;
+      case 'date_desc':
+        a.sort((a, b) => b.datetime.compareTo(a.datetime));
+        break;
+      case 'date_asc':
+        a.sort((a, b) => a.datetime.compareTo(b.datetime));
+        break;
+    }
+  }
+
+  void _showSortOptions() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext context) {
+        return Container(
+          decoration: BoxDecoration(
+            color: themeProvider.cardColor,
+            borderRadius: BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                margin: EdgeInsets.only(top: 12),
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: themeProvider.dividerColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Sort Transactions',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: themeProvider.textColor,
+                  ),
+                ),
+              ),
+              Divider(color: themeProvider.dividerColor),
+              ...sortOptions.map((option) => ListTile(
+                leading: Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: sortType == option['value'] 
+                        ? themeProvider.primaryColor.withOpacity(0.1)
+                        : themeProvider.backgroundColor,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    option['icon'],
+                    color: sortType == option['value'] 
+                        ? themeProvider.primaryColor 
+                        : themeProvider.subtitleColor,
+                  ),
+                ),
+                title: Text(
+                  option['label'],
+                  style: TextStyle(
+                    color: sortType == option['value'] 
+                        ? themeProvider.primaryColor 
+                        : themeProvider.textColor,
+                    fontWeight: sortType == option['value'] 
+                        ? FontWeight.bold 
+                        : FontWeight.normal,
+                  ),
+                ),
+                trailing: sortType == option['value']
+                    ? Icon(Icons.check_circle, color: themeProvider.primaryColor)
+                    : null,
+                onTap: () {
+                  setState(() {
+                    sortType = option['value'];
+                    _sortTransactions();
+                  });
+                  Navigator.pop(context);
+                },
+              )).toList(),
+              SizedBox(height: 20),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -63,7 +174,8 @@ class _StatisticsState extends State<Statistics> {
             valueListenable: kj,
             builder: (context, dynamic value, child) {
               if (value < f.length) {
-                a = f[value];
+                a = List.from(f[value]);
+                _sortTransactions();
               }
               return custom();
             },
@@ -102,7 +214,7 @@ class _StatisticsState extends State<Statistics> {
                           setState(() {
                             index_color = index;
                             kj.value = index;
-                            _loadData(); // โหลดข้อมูลใหม่
+                            _loadData();
                           });
                         },
                         child: Container(
@@ -157,15 +269,53 @@ class _StatisticsState extends State<Statistics> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    GestureDetector(
-                      onTap: () {
-                        // สลับการเรียงลำดับ
-                        setState(() {
-                          a.sort((a, b) => b.amount.compareTo(a.amount));
-                        });
-                      },
-                      child: Icon(Icons.swap_vert,
-                          size: 25, color: themeProvider.subtitleColor),
+                    // ปุ่มเรียงลำดับที่สวยขึ้น
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(20),
+                        onTap: _showSortOptions,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: themeProvider.primaryColor.withOpacity(0.5),
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            color: themeProvider.primaryColor.withOpacity(0.1),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                sortOptions.firstWhere(
+                                  (opt) => opt['value'] == sortType
+                                )['icon'],
+                                size: 16,
+                                color: themeProvider.primaryColor,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                sortOptions.firstWhere(
+                                  (opt) => opt['value'] == sortType
+                                )['label'],
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: themeProvider.primaryColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(
+                                Icons.arrow_drop_down,
+                                size: 18,
+                                color: themeProvider.primaryColor,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

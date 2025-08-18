@@ -22,7 +22,7 @@ class _BottomState extends State<Bottom> {
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     List<Widget> screens = [
       Home(),
       Statistics(),
@@ -51,8 +51,10 @@ class _BottomState extends State<Bottom> {
             Navigator.push(
               context,
               PageRouteBuilder(
-                pageBuilder: (context, animation, secondaryAnimation) => Add_Screen(),
-                transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                pageBuilder: (context, animation, secondaryAnimation) =>
+                    Add_Screen(),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
                   const begin = Offset(0.0, 1.0);
                   const end = Offset.zero;
                   const curve = Curves.easeInOut;
@@ -71,17 +73,20 @@ class _BottomState extends State<Bottom> {
           },
           backgroundColor: themeProvider.primaryColor,
           elevation: 0,
-          child: Icon(Icons.add, color: Colors.white, size: 28),
+          child: Icon(Icons.add, color: Colors.white, size: 28), // เพิ่มขนาด icon
+          // mini: false, // ใช้ FAB ขนาดปกติ (ใหญ่ขึ้น)
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         color: themeProvider.cardColor,
         shape: CircularNotchedRectangle(),
-        notchMargin: 8,
-        elevation: 8,
-        shadowColor: themeProvider.isDarkMode ? Colors.black : Colors.grey.withOpacity(0.3),
-        height: 70,
+        notchMargin: 6,
+        elevation: 6,
+        shadowColor: themeProvider.isDarkMode
+            ? Colors.black
+            : Colors.grey.withOpacity(0.2),
+        height: 100, // ปรับความสูง navbar ให้สมส่วนกับ icon
         child: Container(
           decoration: BoxDecoration(
             border: Border(
@@ -96,7 +101,7 @@ class _BottomState extends State<Bottom> {
             children: [
               _buildNavItem(Icons.home_rounded, 'Home', 0),
               _buildNavItem(Icons.bar_chart_rounded, 'Stats', 1),
-              SizedBox(width: 60), // Space for FAB
+              SizedBox(width: 64), // เพิ่มช่องว่าง FAB ให้สมส่วน
               _buildNavItem(Icons.wallet_rounded, 'Wallet', 2),
               _buildNavItem(Icons.person_rounded, 'Profile', 3),
             ],
@@ -109,16 +114,15 @@ class _BottomState extends State<Bottom> {
   Widget _buildNavItem(IconData icon, String label, int index) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     bool isSelected = index_color == index;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() => index_color = index);
-        // Add haptic feedback
         HapticFeedback.lightImpact();
       },
       child: AnimatedContainer(
         duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -126,43 +130,31 @@ class _BottomState extends State<Bottom> {
               duration: Duration(milliseconds: 200),
               padding: EdgeInsets.all(isSelected ? 8 : 4),
               decoration: BoxDecoration(
-                color: isSelected 
-                    ? themeProvider.primaryColor.withOpacity(0.1)
+                color: isSelected
+                    ? themeProvider.primaryColor.withOpacity(0.12)
                     : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(
                 icon,
-                color: isSelected 
-                    ? themeProvider.primaryColor 
+                color: isSelected
+                    ? themeProvider.primaryColor
                     : themeProvider.subtitleColor,
-                size: isSelected ? 26 : 24,
+                size: isSelected ? 20 : 16,
               ),
             ),
             SizedBox(height: 4),
             AnimatedDefaultTextStyle(
               duration: Duration(milliseconds: 200),
               style: TextStyle(
-                color: isSelected 
-                    ? themeProvider.primaryColor 
+                color: isSelected
+                    ? themeProvider.primaryColor
                     : themeProvider.subtitleColor,
                 fontSize: isSelected ? 12 : 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
               child: Text(label),
             ),
-            // Add indicator dot
-            if (isSelected)
-              AnimatedContainer(
-                duration: Duration(milliseconds: 200),
-                margin: EdgeInsets.only(top: 2),
-                height: 3,
-                width: 3,
-                decoration: BoxDecoration(
-                  color: themeProvider.primaryColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
           ],
         ),
       ),
