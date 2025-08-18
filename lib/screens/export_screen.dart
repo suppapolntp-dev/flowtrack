@@ -1,5 +1,7 @@
-// lib/screens/export_screen.dart
+// lib/screens/export_screen.dart - Updated with Theme Support
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flowtrack/providers/theme_provider.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
@@ -21,11 +23,13 @@ class _ExportScreenState extends State<ExportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
         title: Text('Export Data'),
-        backgroundColor: Color(0xFFFFC870),
+        backgroundColor: themeProvider.primaryColor,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -47,14 +51,18 @@ class _ExportScreenState extends State<ExportScreen> {
   }
 
   Widget _buildHeaderSection() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: themeProvider.isDarkMode 
+                ? Colors.black26 
+                : Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: Offset(0, 2),
           ),
@@ -65,13 +73,23 @@ class _ExportScreenState extends State<ExportScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.file_download, color: Color(0xFFFFC870), size: 28),
+              Container(
+                padding: EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: themeProvider.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.file_download, 
+                    color: themeProvider.primaryColor, 
+                    size: 28),
+              ),
               SizedBox(width: 12),
               Text(
                 'Export Your Data',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
+                  color: themeProvider.textColor,
                 ),
               ),
             ],
@@ -80,7 +98,7 @@ class _ExportScreenState extends State<ExportScreen> {
           Text(
             'Export your transaction data to use in other applications like Excel, Google Sheets, or for backup purposes.',
             style: TextStyle(
-              color: Colors.grey.shade600,
+              color: themeProvider.subtitleColor,
               height: 1.5,
             ),
           ),
@@ -90,14 +108,18 @@ class _ExportScreenState extends State<ExportScreen> {
   }
 
   Widget _buildPeriodSelection() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: themeProvider.isDarkMode 
+                ? Colors.black26 
+                : Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: Offset(0, 2),
           ),
@@ -111,14 +133,16 @@ class _ExportScreenState extends State<ExportScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
+              color: themeProvider.textColor,
             ),
           ),
           SizedBox(height: 15),
           ...periods.map((period) => RadioListTile<String>(
-            title: Text(period),
+            title: Text(period, 
+                style: TextStyle(color: themeProvider.textColor)),
             value: period,
             groupValue: selectedPeriod,
-            activeColor: Color(0xFFFFC870),
+            activeColor: themeProvider.primaryColor,
             onChanged: (value) {
               setState(() {
                 selectedPeriod = value!;
@@ -143,25 +167,6 @@ class _ExportScreenState extends State<ExportScreen> {
           onTap: () => _exportToCSV(),
         ),
         SizedBox(height: 15),
-        
-        // PDF Export (Coming soon)
-        _buildExportCard(
-          icon: Icons.picture_as_pdf,
-          title: 'Export as PDF',
-          subtitle: 'Professional report format (Coming soon)',
-          color: Colors.grey,
-          onTap: null,
-        ),
-        SizedBox(height: 15),
-        
-        // JSON Export (for backup)
-        _buildExportCard(
-          icon: Icons.code,
-          title: 'Export as JSON',
-          subtitle: 'Raw data format for developers',
-          color: Colors.blue,
-          onTap: () => _exportToJSON(),
-        ),
       ],
     );
   }
@@ -173,15 +178,18 @@ class _ExportScreenState extends State<ExportScreen> {
     required Color color,
     required VoidCallback? onTap,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final isEnabled = onTap != null;
     
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: themeProvider.isDarkMode 
+                ? Colors.black26 
+                : Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: Offset(0, 2),
           ),
@@ -204,7 +212,7 @@ class _ExportScreenState extends State<ExportScreen> {
                   ),
                   child: Icon(
                     icon,
-                    color: color,
+                    color: isEnabled ? color : Colors.grey,
                     size: 28,
                   ),
                 ),
@@ -218,14 +226,14 @@ class _ExportScreenState extends State<ExportScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isEnabled ? Colors.black87 : Colors.grey,
+                          color: isEnabled ? themeProvider.textColor : themeProvider.subtitleColor,
                         ),
                       ),
                       SizedBox(height: 4),
                       Text(
                         subtitle,
                         style: TextStyle(
-                          color: Colors.grey.shade600,
+                          color: themeProvider.subtitleColor,
                           fontSize: 14,
                         ),
                       ),
@@ -236,12 +244,14 @@ class _ExportScreenState extends State<ExportScreen> {
                   SizedBox(
                     width: 20,
                     height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: themeProvider.primaryColor),
                   )
                 else if (isEnabled)
                   Icon(
                     Icons.arrow_forward_ios,
-                    color: Colors.grey.shade400,
+                    color: themeProvider.subtitleColor,
                     size: 16,
                   ),
               ],
@@ -253,16 +263,19 @@ class _ExportScreenState extends State<ExportScreen> {
   }
 
   Widget _buildDataPreview() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final transactions = _getTransactionsForPeriod();
     
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: themeProvider.isDarkMode 
+                ? Colors.black26 
+                : Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: Offset(0, 2),
           ),
@@ -276,6 +289,7 @@ class _ExportScreenState extends State<ExportScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
+              color: themeProvider.textColor,
             ),
           ),
           SizedBox(height: 15),
@@ -293,21 +307,24 @@ class _ExportScreenState extends State<ExportScreen> {
   }
 
   Widget _buildPreviewStat(String label, String value, IconData icon) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Column(
       children: [
-        Icon(icon, color: Color(0xFFFFC870), size: 24),
+        Icon(icon, color: themeProvider.primaryColor, size: 24),
         SizedBox(height: 8),
         Text(
           value,
           style: TextStyle(
             fontWeight: FontWeight.bold,
             fontSize: 16,
+            color: themeProvider.textColor,
           ),
         ),
         Text(
           label,
           style: TextStyle(
-            color: Colors.grey.shade600,
+            color: themeProvider.subtitleColor,
             fontSize: 12,
           ),
         ),

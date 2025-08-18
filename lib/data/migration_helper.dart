@@ -38,7 +38,7 @@ class MigrationHelper {
             try {
               // ลบเครื่องหมาย $ และ , ออกก่อน
               String cleanAmount = oldData.amount
-                  .replaceAll('\$', '')
+                  .replaceAll('\฿', '')
                   .replaceAll(',', '')
                   .replaceAll(' ', '')
                   .trim();

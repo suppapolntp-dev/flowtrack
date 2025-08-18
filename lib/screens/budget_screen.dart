@@ -1,10 +1,12 @@
-// lib/screens/budget_screen.dart - แก้ไขให้เชื่อมกับ Home
+// lib/screens/budget_screen.dart - Updated with Theme Support
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flowtrack/providers/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 
 class BudgetScreen extends StatefulWidget {
-  final VoidCallback? onBudgetUpdated; // เพิ่ม callback
+  final VoidCallback? onBudgetUpdated;
   const BudgetScreen({super.key, this.onBudgetUpdated});
 
   @override
@@ -66,8 +68,6 @@ class _BudgetScreenState extends State<BudgetScreen> {
       });
 
       budgetController.clear();
-
-      // เรียก callback เพื่ออัปเดต Home
       widget.onBudgetUpdated?.call();
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -87,15 +87,19 @@ class _BudgetScreenState extends State<BudgetScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
         title: Text('Budget Settings'),
-        backgroundColor: Color(0xFFFFC870),
+        backgroundColor: themeProvider.primaryColor,
         elevation: 0,
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator(
+              color: themeProvider.primaryColor,
+            ))
           : SingleChildScrollView(
               padding: EdgeInsets.all(20),
               child: Column(
@@ -116,30 +120,36 @@ class _BudgetScreenState extends State<BudgetScreen> {
   }
 
   Widget _buildCurrentBudgetCard() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     if (monthlyBudget <= 0) {
       return Container(
         padding: EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: themeProvider.cardColor,
           borderRadius: BorderRadius.circular(15),
           boxShadow: [
             BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: themeProvider.isDarkMode 
+                    ? Colors.black26 
+                    : Colors.grey.withOpacity(0.1),
                 blurRadius: 10,
                 offset: Offset(0, 2))
           ],
         ),
         child: Column(
           children: [
-            Icon(Icons.account_balance_wallet, size: 60, color: Colors.grey),
+            Icon(Icons.account_balance_wallet, 
+                size: 60, 
+                color: themeProvider.subtitleColor),
             SizedBox(height: 16),
             Text('No Budget Set',
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey)),
+                    color: themeProvider.textColor)),
             Text('Set a monthly budget to track your spending',
-                style: TextStyle(color: Colors.grey.shade600),
+                style: TextStyle(color: themeProvider.subtitleColor),
                 textAlign: TextAlign.center),
           ],
         ),
@@ -158,11 +168,13 @@ class _BudgetScreenState extends State<BudgetScreen> {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: themeProvider.isDarkMode 
+                  ? Colors.black26 
+                  : Colors.grey.withOpacity(0.1),
               blurRadius: 10,
               offset: Offset(0, 2))
         ],
@@ -173,16 +185,18 @@ class _BudgetScreenState extends State<BudgetScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('Monthly Budget',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-              Icon(Icons.edit, color: Colors.grey),
+                  style: TextStyle(
+                      fontSize: 18, 
+                      fontWeight: FontWeight.bold,
+                      color: themeProvider.textColor)),
             ],
           ),
           SizedBox(height: 10),
-          Text('\$${monthlyBudget.toStringAsFixed(2)}',
+          Text('\฿${monthlyBudget.toStringAsFixed(2)}',
               style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFFFFC870))),
+                  color: themeProvider.primaryColor)),
           SizedBox(height: 20),
           Column(
             children: [
@@ -190,15 +204,15 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text('Spent',
-                      style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      style: TextStyle(fontSize: 12, color: themeProvider.subtitleColor)),
                   Text('${percentage.toStringAsFixed(1)}%',
-                      style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      style: TextStyle(fontSize: 12, color: themeProvider.subtitleColor)),
                 ],
               ),
               SizedBox(height: 5),
               LinearProgressIndicator(
                 value: percentage / 100,
-                backgroundColor: Colors.grey.shade200,
+                backgroundColor: themeProvider.dividerColor,
                 valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                 minHeight: 8,
               ),
@@ -212,21 +226,21 @@ class _BudgetScreenState extends State<BudgetScreen> {
                 children: [
                   Text('Spent',
                       style:
-                          TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                  Text('\$${currentSpent.toStringAsFixed(2)}',
+                          TextStyle(color: themeProvider.subtitleColor, fontSize: 12)),
+                  Text('\฿${currentSpent.toStringAsFixed(2)}',
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: Colors.red)),
                 ],
               ),
-              Container(height: 40, width: 1, color: Colors.grey.shade300),
+              Container(height: 40, width: 1, color: themeProvider.dividerColor),
               Column(
                 children: [
                   Text('Remaining',
                       style:
-                          TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-                  Text('\$${remaining.toStringAsFixed(2)}',
+                          TextStyle(color: themeProvider.subtitleColor, fontSize: 12)),
+                  Text('\฿${remaining.toStringAsFixed(2)}',
                       style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -267,14 +281,18 @@ class _BudgetScreenState extends State<BudgetScreen> {
   }
 
   Widget _buildBudgetBreakdown() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: themeProvider.isDarkMode 
+                  ? Colors.black26 
+                  : Colors.grey.withOpacity(0.1),
               blurRadius: 10,
               offset: Offset(0, 2))
         ],
@@ -283,7 +301,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Budget Breakdown',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  fontSize: 18, 
+                  fontWeight: FontWeight.bold,
+                  color: themeProvider.textColor)),
           SizedBox(height: 15),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -299,34 +320,43 @@ class _BudgetScreenState extends State<BudgetScreen> {
   }
 
   Widget _buildBudgetItem(String period, double amount, IconData icon) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Column(
       children: [
         Container(
           padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Color(0xFFFFC870).withOpacity(0.1),
+            color: themeProvider.primaryColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: Color(0xFFFFC870)),
+          child: Icon(icon, color: themeProvider.primaryColor),
         ),
         SizedBox(height: 8),
         Text(period,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
-        Text('\$${amount.toStringAsFixed(0)}',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            style: TextStyle(color: themeProvider.subtitleColor, fontSize: 12)),
+        Text('\฿${amount.toStringAsFixed(0)}',
+            style: TextStyle(
+                fontWeight: FontWeight.bold, 
+                fontSize: 16,
+                color: themeProvider.textColor)),
       ],
     );
   }
 
   Widget _buildSetBudgetCard() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: themeProvider.isDarkMode 
+                  ? Colors.black26 
+                  : Colors.grey.withOpacity(0.1),
               blurRadius: 10,
               offset: Offset(0, 2))
         ],
@@ -335,20 +365,32 @@ class _BudgetScreenState extends State<BudgetScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('Set Monthly Budget',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  fontSize: 18, 
+                  fontWeight: FontWeight.bold,
+                  color: themeProvider.textColor)),
           SizedBox(height: 15),
           TextField(
             controller: budgetController,
             keyboardType: TextInputType.number,
+            style: TextStyle(color: themeProvider.textColor),
             decoration: InputDecoration(
               labelText: 'Monthly Budget Amount',
-              prefixText: '\$ ',
+              labelStyle: TextStyle(color: themeProvider.subtitleColor),
+              prefixText: '\฿ ',
+              prefixStyle: TextStyle(color: themeProvider.textColor),
               border:
                   OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10),
+                borderSide: BorderSide(color: themeProvider.dividerColor),
+              ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
-                borderSide: BorderSide(color: Color(0xFFFFC870), width: 2),
+                borderSide: BorderSide(color: themeProvider.primaryColor, width: 2),
               ),
+              filled: true,
+              fillColor: themeProvider.backgroundColor,
             ),
           ),
           SizedBox(height: 15),
@@ -358,7 +400,7 @@ class _BudgetScreenState extends State<BudgetScreen> {
             child: ElevatedButton(
               onPressed: _saveBudget,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Color(0xFFFFC870),
+                backgroundColor: themeProvider.primaryColor,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
@@ -373,12 +415,15 @@ class _BudgetScreenState extends State<BudgetScreen> {
   }
 
   Widget _buildBudgetTips() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50,
+        color: Colors.blue.shade50.withOpacity(themeProvider.isDarkMode ? 0.1 : 1),
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(
+            color: Colors.blue.shade200.withOpacity(themeProvider.isDarkMode ? 0.3 : 1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

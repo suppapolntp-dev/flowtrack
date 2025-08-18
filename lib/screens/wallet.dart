@@ -1,5 +1,7 @@
-// lib/screens/wallet.dart - เพิ่ม Delete Transaction
+// lib/screens/wallet.dart - Updated with Theme Support
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flowtrack/providers/theme_provider.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 import 'package:flowtrack/data/models/category.dart';
 import 'package:flowtrack/data/models/transaction.dart';
@@ -92,8 +94,10 @@ class _WalletScreenState extends State<WalletScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: themeProvider.backgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadCategorySpending,
@@ -111,11 +115,13 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildHeader() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
+        color: themeProvider.primaryColor,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(20),
           bottomRight: Radius.circular(20),
@@ -138,6 +144,8 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildPeriodSelector() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Container(
       margin: EdgeInsets.all(16),
       child: SingleChildScrollView(
@@ -158,26 +166,34 @@ class _WalletScreenState extends State<WalletScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
                   color: isSelected
-                      ? Theme.of(context).primaryColor
-                      : Colors.white,
+                      ? themeProvider.primaryColor
+                      : themeProvider.cardColor,
                   boxShadow: [
                     if (isSelected)
                       BoxShadow(
-                        color: Theme.of(context).primaryColor.withOpacity(0.3),
+                        color: themeProvider.primaryColor.withOpacity(0.3),
                         blurRadius: 8,
+                        offset: Offset(0, 2),
+                      )
+                    else
+                      BoxShadow(
+                        color: themeProvider.isDarkMode
+                            ? Colors.black26
+                            : Colors.grey.withOpacity(0.1),
+                        blurRadius: 4,
                         offset: Offset(0, 2),
                       ),
                   ],
                   border: Border.all(
                     color: isSelected
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey.shade300,
+                        ? themeProvider.primaryColor
+                        : themeProvider.dividerColor,
                   ),
                 ),
                 child: Text(
                   periods[index],
                   style: TextStyle(
-                    color: isSelected ? Colors.white : Colors.grey.shade700,
+                    color: isSelected ? Colors.white : themeProvider.textColor,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                     fontSize: 14,
                   ),
@@ -191,11 +207,16 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildTotalSummary() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     if (isLoading) {
       return Container(
         margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         height: 80,
-        child: Center(child: CircularProgressIndicator()),
+        child: Center(
+            child: CircularProgressIndicator(
+          color: themeProvider.primaryColor,
+        )),
       );
     }
 
@@ -208,13 +229,15 @@ class _WalletScreenState extends State<WalletScreen> {
       margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
+              color: themeProvider.isDarkMode
+                  ? Colors.black26
+                  : Colors.grey.withOpacity(0.1),
               blurRadius: 10,
-              offset: Offset(0, 2)),
+              offset: Offset(0, 2))
         ],
       ),
       child: Row(
@@ -223,20 +246,22 @@ class _WalletScreenState extends State<WalletScreen> {
           Column(
             children: [
               Text('Total Spending',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+                  style: TextStyle(
+                      color: themeProvider.subtitleColor, fontSize: 14)),
               SizedBox(height: 4),
-              Text('\$${totalSpending.toStringAsFixed(2)}',
+              Text('\฿${totalSpending.toStringAsFixed(2)}',
                   style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: Colors.red.shade600)),
             ],
           ),
-          Container(height: 40, width: 1, color: Colors.grey.shade300),
+          Container(height: 40, width: 1, color: themeProvider.dividerColor),
           Column(
             children: [
               Text('Transactions',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+                  style: TextStyle(
+                      color: themeProvider.subtitleColor, fontSize: 14)),
               SizedBox(height: 4),
               Text('$totalTransactions',
                   style: TextStyle(
@@ -245,11 +270,12 @@ class _WalletScreenState extends State<WalletScreen> {
                       color: Colors.blue.shade600)),
             ],
           ),
-          Container(height: 40, width: 1, color: Colors.grey.shade300),
+          Container(height: 40, width: 1, color: themeProvider.dividerColor),
           Column(
             children: [
               Text('Categories',
-                  style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+                  style: TextStyle(
+                      color: themeProvider.subtitleColor, fontSize: 14)),
               SizedBox(height: 4),
               Text('${categorySpendingList.length}',
                   style: TextStyle(
@@ -264,8 +290,13 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 
   Widget _buildCategoryList() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     if (isLoading) {
-      return Center(child: CircularProgressIndicator());
+      return Center(
+          child: CircularProgressIndicator(
+        color: themeProvider.primaryColor,
+      ));
     }
 
     if (categorySpendingList.isEmpty) {
@@ -273,16 +304,17 @@ class _WalletScreenState extends State<WalletScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.wallet, size: 64, color: Colors.grey),
+            Icon(Icons.wallet, size: 64, color: themeProvider.subtitleColor),
             SizedBox(height: 16),
             Text('No spending data',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey)),
+                    color: themeProvider.subtitleColor)),
             SizedBox(height: 8),
             Text('Add some transactions to see category breakdown',
-                style: TextStyle(fontSize: 14, color: Colors.grey),
+                style:
+                    TextStyle(fontSize: 14, color: themeProvider.subtitleColor),
                 textAlign: TextAlign.center),
           ],
         ),
@@ -307,13 +339,14 @@ class _WalletScreenState extends State<WalletScreen> {
 
   Widget _buildCategoryCard(
       CategorySpending categorySpending, double percentage) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final category = categorySpending.category;
     final color = Color(int.parse('0xFF${category.colorHex.substring(1)}'));
 
     return Container(
       margin: EdgeInsets.only(bottom: 12),
       child: Material(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(15),
         elevation: 2,
         child: InkWell(
@@ -347,9 +380,11 @@ class _WalletScreenState extends State<WalletScreen> {
                         children: [
                           Text(category.name,
                               style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.w600)),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: themeProvider.textColor)),
                           Text(
-                              '\$${categorySpending.totalAmount.toStringAsFixed(2)}',
+                              '\฿${categorySpending.totalAmount.toStringAsFixed(2)}',
                               style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -365,10 +400,11 @@ class _WalletScreenState extends State<WalletScreen> {
                           Text(
                               '${categorySpending.transactionCount} transactions',
                               style: TextStyle(
-                                  color: Colors.grey.shade600, fontSize: 12)),
+                                  color: themeProvider.subtitleColor,
+                                  fontSize: 12)),
                           Text('${percentage.toStringAsFixed(1)}%',
                               style: TextStyle(
-                                  color: Colors.grey.shade600,
+                                  color: themeProvider.subtitleColor,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500)),
                         ],
@@ -377,7 +413,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       Container(
                         height: 4,
                         decoration: BoxDecoration(
-                            color: Colors.grey.shade200,
+                            color: themeProvider.dividerColor,
                             borderRadius: BorderRadius.circular(2)),
                         child: FractionallySizedBox(
                           alignment: Alignment.centerLeft,
@@ -431,13 +467,14 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final category = categorySpending.category;
     final color = Color(int.parse('0xFF${category.colorHex.substring(1)}'));
 
     return Container(
       height: MediaQuery.of(context).size.height * 0.8,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.only(
             topLeft: Radius.circular(25), topRight: Radius.circular(25)),
       ),
@@ -448,7 +485,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: themeProvider.dividerColor,
                 borderRadius: BorderRadius.circular(2)),
           ),
 
@@ -477,17 +514,20 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                     children: [
                       Text(category.name,
                           style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: themeProvider.textColor)),
                       Text('$period Period',
                           style: TextStyle(
-                              color: Colors.grey.shade600, fontSize: 14)),
+                              color: themeProvider.subtitleColor,
+                              fontSize: 14)),
                     ],
                   ),
                 ),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('\$${categorySpending.totalAmount.toStringAsFixed(2)}',
+                    Text('\฿${categorySpending.totalAmount.toStringAsFixed(2)}',
                         style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -496,14 +536,14 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                                 : Colors.green.shade600)),
                     Text('${categorySpending.transactionCount} transactions',
                         style: TextStyle(
-                            color: Colors.grey.shade600, fontSize: 12)),
+                            color: themeProvider.subtitleColor, fontSize: 12)),
                   ],
                 ),
               ],
             ),
           ),
 
-          Divider(height: 1),
+          Divider(height: 1, color: themeProvider.dividerColor),
 
           // Transaction List with Delete
           Expanded(
@@ -522,6 +562,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
   }
 
   Widget _buildTransactionItem(BuildContext context, Transaction transaction) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
     return Dismissible(
@@ -539,9 +580,12 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
         return await showDialog(
           context: context,
           builder: (context) => AlertDialog(
-            title: Text('Delete Transaction'),
+            backgroundColor: themeProvider.cardColor,
+            title: Text('Delete Transaction',
+                style: TextStyle(color: themeProvider.textColor)),
             content: Text(
-                'Are you sure you want to delete this transaction?\n\n"${transaction.description}"'),
+                'Are you sure you want to delete this transaction?\n\n"${transaction.description}"',
+                style: TextStyle(color: themeProvider.textColor)),
             actions: [
               TextButton(
                   onPressed: () => Navigator.pop(context, false),
@@ -576,7 +620,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 8),
         padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
-            color: Colors.grey.shade50,
+            color: themeProvider.backgroundColor,
             borderRadius: BorderRadius.circular(10)),
         child: Row(
           children: [
@@ -585,13 +629,15 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(transaction.description,
-                      style:
-                          TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                      style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 14,
+                          color: themeProvider.textColor)),
                   SizedBox(height: 4),
                   Text(
                       '${dayNames[transaction.datetime.weekday - 1]} ${transaction.datetime.day}/${transaction.datetime.month}/${transaction.datetime.year}',
-                      style:
-                          TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                      style: TextStyle(
+                          color: themeProvider.subtitleColor, fontSize: 12)),
                 ],
               ),
             ),
@@ -605,8 +651,9 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                         color:
                             transaction.isIncome ? Colors.green : Colors.red)),
                 Text('Swipe to delete',
-                    style:
-                        TextStyle(color: Colors.grey.shade500, fontSize: 10)),
+                    style: TextStyle(
+                        color: themeProvider.subtitleColor.withOpacity(0.7),
+                        fontSize: 10)),
               ],
             ),
           ],

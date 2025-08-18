@@ -5,6 +5,7 @@ import 'package:flowtrack/widgets/bottomnavigationbar.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 import 'package:flowtrack/data/migration_helper.dart';
 import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/providers/user_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -16,7 +17,16 @@ void main() async {
     print('Database error: $e');
   }
   
-  runApp(const FlowTrackApp());
+  runApp(
+  MultiProvider(
+    providers: [
+      ChangeNotifierProvider(create: (_) => ThemeProvider()..loadTheme()),
+      ChangeNotifierProvider(create: (_) => UserProvider()..loadUserData()), // เพิ่ม
+    ],
+    child: const FlowTrackApp(),
+  ),
+);
+
 }
 
 class FlowTrackApp extends StatelessWidget {
@@ -45,20 +55,59 @@ class FlowTrackApp extends StatelessWidget {
     return ThemeData(
       brightness: isDark ? Brightness.dark : Brightness.light,
       primaryColor: primaryColor,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primaryColor,
+        brightness: isDark ? Brightness.dark : Brightness.light,
+      ),
       scaffoldBackgroundColor: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
+      
+      // AppBar Theme
       appBarTheme: AppBarTheme(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
+        centerTitle: true,
       ),
+      
+      // FloatingActionButton Theme
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
       ),
+      
+      // ElevatedButton Theme
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+      
+      // Card Theme
+      cardTheme: CardThemeData(
+        color: isDark ? Colors.grey.shade800 : Colors.white,
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+      
+      // Removed unsupported containerColor parameter
+      
+      // Text Theme
+      textTheme: TextTheme(
+        headlineLarge: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+          fontWeight: FontWeight.bold,
+        ),
+        bodyLarge: TextStyle(
+          color: isDark ? Colors.white : Colors.black87,
+        ),
+        bodyMedium: TextStyle(
+          color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
         ),
       ),
     );

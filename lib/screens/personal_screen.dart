@@ -1,11 +1,12 @@
-// lib/screens/personal_screen.dart - ปรับปรุงใหม่
+// lib/screens/personal_screen.dart - Updated with Theme Support
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flowtrack/providers/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'profile_screen.dart';
 import 'theme_settings.dart';
 import 'budget_screen.dart';
 import 'export_screen.dart';
-import 'backup_screen.dart';
 import 'category_manager.dart';
 
 class PersonalScreen extends StatefulWidget {
@@ -22,7 +23,6 @@ class _PersonalScreenState extends State<PersonalScreen>
 
   String userName = 'User';
   String userEmail = 'user@email.com';
-  bool isDarkMode = false;
   bool isLoading = true;
 
   @override
@@ -50,7 +50,6 @@ class _PersonalScreenState extends State<PersonalScreen>
       setState(() {
         userName = prefs.getString('user_name') ?? 'Mr.Suppapol Tabudda';
         userEmail = prefs.getString('user_email') ?? 'user@email.com';
-        isDarkMode = prefs.getBool('isDarkMode') ?? false;
         isLoading = false;
       });
       _animationController.forward();
@@ -70,15 +69,20 @@ class _PersonalScreenState extends State<PersonalScreen>
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     if (isLoading) {
       return Scaffold(
-        backgroundColor: Colors.grey.shade50,
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: themeProvider.backgroundColor,
+        body: Center(
+            child: CircularProgressIndicator(
+          color: themeProvider.primaryColor,
+        )),
       );
     }
 
     return Scaffold(
-      backgroundColor: isDarkMode ? Colors.grey.shade900 : Colors.grey.shade50,
+      backgroundColor: themeProvider.backgroundColor,
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnimation,
@@ -99,6 +103,8 @@ class _PersonalScreenState extends State<PersonalScreen>
   }
 
   Widget _buildModernHeader() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(30),
@@ -107,9 +113,9 @@ class _PersonalScreenState extends State<PersonalScreen>
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFFFFC870),
-            Color(0xFFFFB347),
-            Color(0xFFFF9F43),
+            themeProvider.primaryColor,
+            themeProvider.primaryColor.withOpacity(0.8),
+            themeProvider.primaryColor.withOpacity(0.6),
           ],
         ),
         borderRadius: BorderRadius.only(
@@ -118,7 +124,7 @@ class _PersonalScreenState extends State<PersonalScreen>
         ),
         boxShadow: [
           BoxShadow(
-            color: Color(0xFFFFC870).withOpacity(0.3),
+            color: themeProvider.primaryColor.withOpacity(0.3),
             blurRadius: 20,
             offset: Offset(0, 10),
           ),
@@ -168,24 +174,24 @@ class _PersonalScreenState extends State<PersonalScreen>
                       ),
                     ),
                     SizedBox(height: 8),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Premium User',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.white,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
+                    // Container(
+                    //   padding: EdgeInsets.symmetric(
+                    //     horizontal: 12,
+                    //     vertical: 4,
+                    //   ),
+                    //   decoration: BoxDecoration(
+                    //     color: Colors.white.withOpacity(0.2),
+                    //     borderRadius: BorderRadius.circular(20),
+                    //   ),
+                    //   child: Text(
+                    //     'Premium User',
+                    //     style: TextStyle(
+                    //       fontSize: 12,
+                    //       color: Colors.white,
+                    //       fontWeight: FontWeight.w500,
+                    //     ),
+                    //   ),
+                    // ),
                   ],
                 ),
               ),
@@ -195,27 +201,27 @@ class _PersonalScreenState extends State<PersonalScreen>
           SizedBox(height: 25),
 
           // Quick Actions
-          Container(
-            padding: EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: Colors.white.withOpacity(0.2),
-                width: 1,
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildQuickStat('Categories', '12', Icons.category),
-                _buildVerticalDivider(),
-                _buildQuickStat('This Month', '\$1,234', Icons.trending_up),
-                _buildVerticalDivider(),
-                _buildQuickStat('Transactions', '89', Icons.receipt_long),
-              ],
-            ),
-          ),
+          // Container(
+          //   padding: EdgeInsets.all(20),
+          //   decoration: BoxDecoration(
+          //     color: Colors.white.withOpacity(0.15),
+          //     borderRadius: BorderRadius.circular(20),
+          //     border: Border.all(
+          //       color: Colors.white.withOpacity(0.2),
+          //       width: 1,
+          //     ),
+          //   ),
+          //   // child: Row(
+          //   //   mainAxisAlignment: MainAxisAlignment.spaceAround,
+          //   //   children: [
+          //   //     _buildQuickStat('Categories', '12', Icons.category),
+          //   //     _buildVerticalDivider(),
+          //   //     _buildQuickStat('This Month', '\$1,234', Icons.trending_up),
+          //   //     _buildVerticalDivider(),
+          //   //     _buildQuickStat('Transactions', '89', Icons.receipt_long),
+          //   //   ],
+          //   // ),
+          // ),
         ],
       ),
     );
@@ -255,6 +261,8 @@ class _PersonalScreenState extends State<PersonalScreen>
   }
 
   Widget _buildMenuList() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     final menuItems = [
       {
         'icon': Icons.person,
@@ -290,16 +298,9 @@ class _PersonalScreenState extends State<PersonalScreen>
         'subtitle': 'Save your data as CSV or JSON',
         'color': Colors.orange,
         'screen': ExportScreen(),
-      },
-      {
-        'icon': Icons.backup,
-        'title': 'Backup & Restore',
-        'subtitle': 'Backup and restore your data',
-        'color': Colors.red,
-        'screen': BackupScreen(),
-      },
+      }
     ];
-
+  
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -359,14 +360,18 @@ class _PersonalScreenState extends State<PersonalScreen>
     required Color color,
     required VoidCallback onTap,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Container(
       margin: EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey.shade800 : Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: themeProvider.isDarkMode
+                ? Colors.black26
+                : Colors.grey.withOpacity(0.1),
             blurRadius: 15,
             offset: Offset(0, 5),
           ),
@@ -419,7 +424,7 @@ class _PersonalScreenState extends State<PersonalScreen>
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
-                          color: isDarkMode ? Colors.white : Colors.black87,
+                          color: themeProvider.textColor,
                         ),
                       ),
                       SizedBox(height: 6),
@@ -427,9 +432,7 @@ class _PersonalScreenState extends State<PersonalScreen>
                         subtitle,
                         style: TextStyle(
                           fontSize: 14,
-                          color: isDarkMode
-                              ? Colors.grey.shade400
-                              : Colors.grey.shade600,
+                          color: themeProvider.subtitleColor,
                           height: 1.3,
                         ),
                       ),
@@ -457,12 +460,14 @@ class _PersonalScreenState extends State<PersonalScreen>
   }
 
   Widget _buildFooter() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Container(
       padding: EdgeInsets.all(20),
       child: Column(
         children: [
           Divider(
-            color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+            color: themeProvider.dividerColor,
           ),
           SizedBox(height: 16),
           Row(
@@ -478,8 +483,7 @@ class _PersonalScreenState extends State<PersonalScreen>
                 'Made with love in FlowTrack',
                 style: TextStyle(
                   fontSize: 12,
-                  color:
-                      isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+                  color: themeProvider.subtitleColor,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -490,7 +494,7 @@ class _PersonalScreenState extends State<PersonalScreen>
             'Version 1.0.0',
             style: TextStyle(
               fontSize: 10,
-              color: isDarkMode ? Colors.grey.shade500 : Colors.grey.shade500,
+              color: themeProvider.subtitleColor.withOpacity(0.7),
             ),
           ),
         ],

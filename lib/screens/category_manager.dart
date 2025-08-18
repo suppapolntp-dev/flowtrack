@@ -1,5 +1,7 @@
-// lib/screens/category_manager.dart - เพิ่ม Reorder และ Stream Updates
+// lib/screens/category_manager.dart - Updated with Theme Support
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flowtrack/providers/theme_provider.dart';
 import 'package:flowtrack/data/models/category.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 
@@ -36,14 +38,34 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     'Food',
     'Coffee',
     'Grocery',
+    'Food-delivery',
+    'Gas-pump',
     'Public Transport',
+    'Rent or Mortgage',
+    'Water Bill',
+    'Electricity Bill',
+    'Internet Bill',
+    'Clothes',
+    'Shoes',
+    'Accessories',
+    'Personal Care Items',
     'Movie',
+    'Concert',
+    'Hobby',
+    'Travel',
+    'Health-Report',
+    'Doctor VisitsHospital',
+    'Education',
+    'Bank Fees',
     'Giftbox',
+    'Donation',
     'salary',
+    'commission',
     'freelanceincome',
     'dividends',
-    'Clothes',
-    'Health-Report'
+    'interest',
+    'rentalincome',
+    'taxrefunds'
   ];
 
   @override
@@ -83,17 +105,20 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
         title: const Text('Category Manager'),
-        backgroundColor: const Color(0xFFFFC870),
+        backgroundColor: themeProvider.primaryColor,
         elevation: 0,
         bottom: TabBar(
           controller: _tabController,
           labelColor: Colors.white,
           unselectedLabelColor: Colors.white70,
           indicatorColor: Colors.white,
+          indicatorWeight: 3,
           tabs: [
             Tab(
                 text: 'Expenses (${expenseCategories.length})',
@@ -105,7 +130,10 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
         ),
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
+          ? Center(
+              child: CircularProgressIndicator(
+              color: themeProvider.primaryColor,
+            ))
           : TabBarView(
               controller: _tabController,
               children: [
@@ -115,14 +143,16 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _showAddCategoryDialog(),
-        backgroundColor: const Color(0xFFFFC870),
-        icon: const Icon(Icons.add),
-        label: Text('Add Category'),
+        backgroundColor: themeProvider.primaryColor,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: Text('Add Category', style: TextStyle(color: Colors.white)),
       ),
     );
   }
 
   Widget _buildReorderableList(List<Category> categories, String type) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     if (categories.isEmpty) {
       return Center(
         child: Column(
@@ -133,16 +163,16 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                     ? Icons.remove_circle_outline
                     : Icons.add_circle_outline,
                 size: 80,
-                color: Colors.grey),
+                color: themeProvider.subtitleColor),
             SizedBox(height: 16),
             Text('No ${type.toLowerCase()} categories',
                 style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w500,
-                    color: Colors.grey)),
+                    color: themeProvider.subtitleColor)),
             SizedBox(height: 8),
             Text('Tap + to add your first category',
-                style: TextStyle(color: Colors.grey)),
+                style: TextStyle(color: themeProvider.subtitleColor)),
           ],
         ),
       );
@@ -161,14 +191,17 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
   }
 
   Widget _buildCategoryCard(Category category, int index) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final color = Color(int.parse('0xFF${category.colorHex.substring(1)}'));
 
     return Card(
       key: ValueKey(category.id),
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
+      color: themeProvider.cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: ListTile(
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
           width: 50,
           height: 50,
@@ -176,22 +209,28 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
             color: color.withOpacity(0.2),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Image.asset('images/${category.iconName}.png',
-              width: 24,
-              height: 24,
-              errorBuilder: (context, error, stackTrace) =>
-                  Icon(Icons.category, color: color, size: 24)),
+          child: Center(
+            child: Image.asset('images/${category.iconName}.png',
+                width: 30,
+                height: 30,
+                errorBuilder: (context, error, stackTrace) =>
+                    Icon(Icons.category, color: color, size: 24)),
+          ),
         ),
         title: Text(category.name,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
+            style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: themeProvider.textColor)),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(height: 4),
-            Text(category.type),
+            Text(category.type,
+                style: TextStyle(color: themeProvider.subtitleColor)),
             if (category.budgetLimit != null) ...[
               SizedBox(height: 4),
-              Text('Budget: \$${category.budgetLimit!.toStringAsFixed(2)}',
+              Text('Budget: \฿${category.budgetLimit!.toStringAsFixed(2)}',
                   style: TextStyle(color: Colors.green[600], fontSize: 12)),
             ],
           ],
@@ -199,13 +238,13 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.drag_handle, color: Colors.grey), // Reorder handle
+            Icon(Icons.drag_handle, color: themeProvider.subtitleColor),
             SizedBox(width: 8),
             IconButton(
-                icon: const Icon(Icons.edit, color: Colors.blue),
+                icon: Icon(Icons.edit, color: Colors.blue),
                 onPressed: () => _showEditCategoryDialog(category)),
             IconButton(
-                icon: const Icon(Icons.delete, color: Colors.red),
+                icon: Icon(Icons.delete, color: Colors.red),
                 onPressed: () => _showDeleteConfirmation(category)),
           ],
         ),
@@ -220,7 +259,6 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     final Category movedCategory = categories.removeAt(oldIndex);
     categories.insert(newIndex, movedCategory);
 
-    // Update in database
     try {
       await DatabaseService.reorderCategories([
         ...expenseCategories,
@@ -229,7 +267,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
       _showSnackBar('Categories reordered!', Colors.green);
     } catch (e) {
       _showSnackBar('Error reordering categories: $e', Colors.red);
-      _loadCategories(); // Reload if error
+      _loadCategories();
     }
   }
 
@@ -243,6 +281,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
   }
 
   void _showCategoryDialog(Category? category, String type) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
     final isEditing = category != null;
     final nameController = TextEditingController(text: category?.name ?? '');
     final budgetController =
@@ -257,132 +296,172 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
-          title: Text(isEditing ? 'Edit Category' : 'Add New Category'),
+          backgroundColor: themeProvider.cardColor,
+          title: Text(
+            isEditing ? 'Edit Category' : 'Add New Category',
+            style: TextStyle(color: themeProvider.textColor),
+          ),
           content: Container(
             width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Category Name *',
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8)),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: selectedColor, width: 2),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                if (type == 'Expense') ...[
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                   TextField(
-                    controller: budgetController,
-                    keyboardType: TextInputType.number,
+                    controller: nameController,
+                    style: TextStyle(color: themeProvider.textColor),
                     decoration: InputDecoration(
-                      labelText: 'Budget Limit (Optional)',
+                      labelText: 'Category Name *',
+                      labelStyle: TextStyle(color: themeProvider.subtitleColor),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8)),
-                      prefixText: '\$ ',
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide:
+                            BorderSide(color: themeProvider.dividerColor),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(color: selectedColor, width: 2),
+                      ),
+                      filled: true,
+                      fillColor: themeProvider.backgroundColor,
                     ),
                   ),
                   const SizedBox(height: 16),
-                ],
-                Text('Select Color:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: availableColors.map((color) {
-                    final isSelected = selectedColor.value == color.value;
-                    return GestureDetector(
-                      onTap: () => setDialogState(() => selectedColor = color),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isSelected
-                                ? Colors.black
-                                : Colors.grey.shade300,
-                            width: isSelected ? 3 : 1,
-                          ),
+                  if (type == 'Expense') ...[
+                    TextField(
+                      controller: budgetController,
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(color: themeProvider.textColor),
+                      decoration: InputDecoration(
+                        labelText: 'Budget Limit (Optional)',
+                        labelStyle:
+                            TextStyle(color: themeProvider.subtitleColor),
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8)),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide:
+                              BorderSide(color: themeProvider.dividerColor),
                         ),
-                        child: isSelected
-                            ? Icon(Icons.check, color: Colors.white, size: 20)
-                            : null,
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(8),
+                          borderSide:
+                              BorderSide(color: selectedColor, width: 2),
+                        ),
+                        prefixText: '\฿ ',
+                        prefixStyle: TextStyle(color: themeProvider.textColor),
+                        filled: true,
+                        fillColor: themeProvider.backgroundColor,
                       ),
-                    );
-                  }).toList(),
-                ),
-                const SizedBox(height: 16),
-                Text('Select Icon:',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 8),
-                Container(
-                  height: 120,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade300),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: GridView.builder(
-                    padding: EdgeInsets.all(8),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 6,
-                      crossAxisSpacing: 4,
-                      mainAxisSpacing: 4,
                     ),
-                    itemCount: availableIcons.length,
-                    itemBuilder: (context, index) {
-                      final icon = availableIcons[index];
-                      final isSelected = selectedIcon == icon;
-
+                    const SizedBox(height: 16),
+                  ],
+                  Text('Select Color:',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: themeProvider.textColor)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: availableColors.map((color) {
+                      final isSelected = selectedColor.value == color.value;
                       return GestureDetector(
-                        onTap: () => setDialogState(() => selectedIcon = icon),
+                        onTap: () =>
+                            setDialogState(() => selectedColor = color),
                         child: Container(
+                          width: 40,
+                          height: 40,
                           decoration: BoxDecoration(
+                            color: color,
+                            shape: BoxShape.circle,
                             border: Border.all(
                               color: isSelected
-                                  ? selectedColor
-                                  : Colors.grey.shade300,
-                              width: isSelected ? 2 : 1,
+                                  ? themeProvider.textColor
+                                  : themeProvider.dividerColor,
+                              width: isSelected ? 3 : 1,
                             ),
-                            borderRadius: BorderRadius.circular(6),
-                            color: isSelected
-                                ? selectedColor.withOpacity(0.1)
-                                : null,
                           ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(2),
-                            child: Image.asset('images/$icon.png',
-                                width: 16,
-                                height: 16,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    Icon(Icons.category,
-                                        color: selectedColor, size: 16)),
-                          ),
+                          child: isSelected
+                              ? Icon(Icons.check, color: Colors.white, size: 20)
+                              : null,
                         ),
                       );
-                    },
+                    }).toList(),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Text('Select Icon:',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: themeProvider.textColor)),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 120,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: themeProvider.dividerColor),
+                      borderRadius: BorderRadius.circular(8),
+                      color: themeProvider.backgroundColor,
+                    ),
+                    child: GridView.builder(
+                      padding: EdgeInsets.all(8),
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 6,
+                        crossAxisSpacing: 4,
+                        mainAxisSpacing: 4,
+                      ),
+                      itemCount: availableIcons.length,
+                      itemBuilder: (context, index) {
+                        final icon = availableIcons[index];
+                        final isSelected = selectedIcon == icon;
+
+                        return GestureDetector(
+                          onTap: () =>
+                              setDialogState(() => selectedIcon = icon),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: isSelected
+                                    ? selectedColor
+                                    : themeProvider.dividerColor,
+                                width: isSelected ? 2 : 1,
+                              ),
+                              borderRadius: BorderRadius.circular(6),
+                              color: isSelected
+                                  ? selectedColor.withOpacity(0.1)
+                                  : null,
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(2),
+                              child: Image.asset('images/$icon.png',
+                                  width: 16,
+                                  height: 16,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      Icon(Icons.category,
+                                          color: selectedColor, size: 16)),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
             TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: const Text('Cancel')),
+                child: Text('Cancel',
+                    style: TextStyle(color: themeProvider.subtitleColor))),
             ElevatedButton(
               onPressed: () => _saveCategory(category, nameController.text,
                   selectedIcon, selectedColor, type, budgetController.text),
               style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFFC870)),
-              child: Text(isEditing ? 'Update' : 'Add'),
+                  backgroundColor: themeProvider.primaryColor),
+              child: Text(isEditing ? 'Update' : 'Add',
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         ),
@@ -435,16 +514,22 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
   }
 
   void _showDeleteConfirmation(Category category) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Delete Category'),
+        backgroundColor: themeProvider.cardColor,
+        title: Text('Delete Category',
+            style: TextStyle(color: themeProvider.textColor)),
         content: Text(
-            'Delete "${category.name}"?\n\nCategories with transactions cannot be deleted.'),
+            'Delete "${category.name}"?\n\nCategories with transactions cannot be deleted.',
+            style: TextStyle(color: themeProvider.textColor)),
         actions: [
           TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+              child: Text('Cancel',
+                  style: TextStyle(color: themeProvider.subtitleColor))),
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
@@ -473,6 +558,10 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
         SnackBar(
             content: Text(message),
             backgroundColor: color,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
             duration: Duration(seconds: 2)),
       );
     }

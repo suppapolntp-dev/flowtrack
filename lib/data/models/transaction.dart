@@ -58,7 +58,7 @@ class Transaction extends HiveObject {
   
   String get formattedAmount {
     String prefix = isIncome ? '+' : '-';
-    return '$prefix\$${amount.toStringAsFixed(2)}';
+    return '$prefix\฿${amount.toStringAsFixed(2)}';
   }
 
   Category? getCategory(Box<Category> categoryBox) {

@@ -1,4 +1,7 @@
+// lib/screens/statistics.dart - Updated with Theme Support
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flowtrack/providers/theme_provider.dart';
 import 'package:flowtrack/data/utlity.dart';
 import 'package:flowtrack/widgets/chart.dart';
 import 'package:flowtrack/data/models/transaction.dart';
@@ -47,7 +50,10 @@ class _StatisticsState extends State<Statistics> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
+      backgroundColor: themeProvider.backgroundColor,
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
@@ -68,6 +74,8 @@ class _StatisticsState extends State<Statistics> {
   }
 
   CustomScrollView custom() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
@@ -77,7 +85,7 @@ class _StatisticsState extends State<Statistics> {
               Text(
                 'Statistics',
                 style: TextStyle(
-                  color: Colors.black,
+                  color: themeProvider.textColor,
                   fontSize: 20,
                   fontWeight: FontWeight.w700,
                 ),
@@ -103,8 +111,18 @@ class _StatisticsState extends State<Statistics> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(10),
                             color: index_color == index
-                                ? Color.fromARGB(255, 255, 200, 112)
-                                : Colors.white,
+                                ? themeProvider.primaryColor
+                                : themeProvider.cardColor,
+                            boxShadow: index_color == index
+                                ? [
+                                    BoxShadow(
+                                      color: themeProvider.primaryColor
+                                          .withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ]
+                                : null,
                           ),
                           alignment: Alignment.center,
                           child: Text(
@@ -112,7 +130,7 @@ class _StatisticsState extends State<Statistics> {
                             style: TextStyle(
                               color: index_color == index
                                   ? Colors.white
-                                  : Colors.black,
+                                  : themeProvider.textColor,
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                             ),
@@ -134,7 +152,7 @@ class _StatisticsState extends State<Statistics> {
                     Text(
                       'Top Spending',
                       style: TextStyle(
-                        color: Colors.grey,
+                        color: themeProvider.textColor,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -146,7 +164,8 @@ class _StatisticsState extends State<Statistics> {
                           a.sort((a, b) => b.amount.compareTo(a.amount));
                         });
                       },
-                      child: Icon(Icons.swap_vert, size: 25, color: Colors.grey),
+                      child: Icon(Icons.swap_vert,
+                          size: 25, color: themeProvider.subtitleColor),
                     ),
                   ],
                 ),
@@ -162,13 +181,14 @@ class _StatisticsState extends State<Statistics> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.bar_chart, size: 64, color: Colors.grey),
+                        Icon(Icons.bar_chart,
+                            size: 64, color: themeProvider.subtitleColor),
                         SizedBox(height: 16),
                         Text(
                           'No transactions for this period',
                           style: TextStyle(
                             fontSize: 18,
-                            color: Colors.grey,
+                            color: themeProvider.subtitleColor,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -177,7 +197,7 @@ class _StatisticsState extends State<Statistics> {
                           'Add some transactions to see statistics',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey,
+                            color: themeProvider.subtitleColor,
                           ),
                         ),
                       ],
@@ -195,42 +215,90 @@ class _StatisticsState extends State<Statistics> {
   }
 
   Widget buildTransactionTile(Transaction transaction) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     final category = DatabaseService.getCategoryById(transaction.categoryId);
     final iconName = category?.iconName ?? 'Giftbox';
-    
+
     final List<String> dayNames = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-      'Friday', 'Saturday', 'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
     ];
 
-    return ListTile(
-      leading: ClipRRect(
-        borderRadius: BorderRadius.circular(5),
-        child: Container(
-          width: 40,
-          height: 40,
-          child: Image.asset(
-            'images/$iconName.png',
-            errorBuilder: (context, error, stackTrace) {
-              return Icon(Icons.category, size: 40, color: Colors.grey);
-            },
+    return Container(
+      margin: EdgeInsets.symmetric(horizontal: 15, vertical: 4),
+      decoration: BoxDecoration(
+        color: themeProvider.cardColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: themeProvider.isDarkMode
+                ? Colors.black26
+                : Colors.grey.withOpacity(0.08),
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          width: 45,
+          height: 45,
+          decoration: BoxDecoration(
+            color: themeProvider.primaryColor.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: EdgeInsets.all(8),
+              child: Image.asset(
+                'images/$iconName.png',
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(Icons.category,
+                      size: 25, color: themeProvider.primaryColor);
+                },
+              ),
+            ),
           ),
         ),
-      ),
-      title: Text(
-        transaction.description, // เปลี่ยนจาก category?.name เป็น description
-        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
-      ),
-      subtitle: Text(
-        '${category?.name ?? 'Unknown'} • ${dayNames[transaction.datetime.weekday - 1]}  ${transaction.datetime.year}-${transaction.datetime.day}-${transaction.datetime.month}',
-        style: TextStyle(fontWeight: FontWeight.w600, color: Colors.grey[600]),
-      ),
-      trailing: Text(
-        transaction.formattedAmount,
-        style: TextStyle(
-          fontWeight: FontWeight.w600,
-          fontSize: 19,
-          color: transaction.isIncome ? Colors.green : Colors.red,
+        title: Text(
+          transaction.description,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: themeProvider.textColor,
+          ),
+        ),
+        subtitle: Text(
+          '${category?.name ?? 'Unknown'} • ${dayNames[transaction.datetime.weekday - 1]}  ${transaction.datetime.day}/${transaction.datetime.month}/${transaction.datetime.year}',
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+            color: themeProvider.subtitleColor,
+            fontSize: 13,
+          ),
+        ),
+        trailing: Container(
+          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: transaction.isIncome
+                ? Colors.green.withOpacity(0.1)
+                : Colors.red.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Text(
+            transaction.formattedAmount,
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: transaction.isIncome ? Colors.green : Colors.red,
+            ),
+          ),
         ),
       ),
     );

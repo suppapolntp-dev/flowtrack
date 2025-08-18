@@ -1,4 +1,7 @@
+// lib/screens/add.dart - Updated with Theme Support
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flowtrack/providers/theme_provider.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 import 'package:flowtrack/data/models/transaction.dart';
 import 'package:flowtrack/data/models/category.dart';
@@ -46,8 +49,10 @@ class _Add_ScreenState extends State<Add_Screen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade100,
+      backgroundColor: themeProvider.backgroundColor,
       body: SafeArea(
         child: Stack(
           alignment: AlignmentDirectional.center,
@@ -61,10 +66,21 @@ class _Add_ScreenState extends State<Add_Screen> {
   }
 
   Container main_container() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
-        color: Colors.white,
+        color: themeProvider.cardColor,
+        boxShadow: [
+          BoxShadow(
+            color: themeProvider.isDarkMode
+                ? Colors.black26
+                : Colors.grey.withOpacity(0.1),
+            blurRadius: 10,
+            offset: Offset(0, 5),
+          ),
+        ],
       ),
       height: 550,
       width: 340,
@@ -89,6 +105,8 @@ class _Add_ScreenState extends State<Add_Screen> {
   }
 
   Widget typeSelector() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 15),
       child: Row(
@@ -111,11 +129,11 @@ class _Add_ScreenState extends State<Add_Screen> {
                           border: Border.all(
                               width: 2,
                               color: selectedType == item
-                                  ? Colors.blue
-                                  : Color(0xffC5C5C5)),
+                                  ? themeProvider.primaryColor
+                                  : themeProvider.inputBorderColor),
                           color: selectedType == item
-                              ? Colors.blue.withOpacity(0.1)
-                              : Colors.white,
+                              ? themeProvider.primaryColor.withOpacity(0.1)
+                              : themeProvider.inputFillColor,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -124,8 +142,8 @@ class _Add_ScreenState extends State<Add_Screen> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: selectedType == item
-                                      ? Colors.blue
-                                      : Colors.black,
+                                      ? themeProvider.primaryColor
+                                      : themeProvider.textColor,
                                   fontWeight: selectedType == item
                                       ? FontWeight.bold
                                       : FontWeight.normal,
@@ -133,10 +151,10 @@ class _Add_ScreenState extends State<Add_Screen> {
                             SizedBox(width: 5),
                             if (selectedType == item)
                               Icon(Icons.check_circle,
-                                  color: Colors.blue, size: 20)
+                                  color: themeProvider.primaryColor, size: 20)
                             else
                               Icon(Icons.radio_button_unchecked,
-                                  color: Colors.grey, size: 20),
+                                  color: themeProvider.subtitleColor, size: 20),
                           ],
                         ),
                       ),
@@ -149,25 +167,34 @@ class _Add_ScreenState extends State<Add_Screen> {
   }
 
   Widget categorySelector() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: InputDecorator(
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
           labelText: 'Category',
-          labelStyle: TextStyle(fontSize: 17, color: Colors.grey.shade500),
+          labelStyle:
+              TextStyle(fontSize: 17, color: themeProvider.subtitleColor),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(width: 2, color: Color(0xffC5C5C5)),
+            borderSide:
+                BorderSide(width: 2, color: themeProvider.inputBorderColor),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(width: 2, color: Color(0xFFFFC870)),
+            borderSide: BorderSide(width: 2, color: themeProvider.primaryColor),
           ),
+          filled: true,
+          fillColor: themeProvider.inputFillColor,
         ),
         child: DropdownButtonHideUnderline(
           child: DropdownButton<Category>(
             value: selectedCategory,
+            dropdownColor: themeProvider.cardColor,
+            style: TextStyle(color: themeProvider.textColor),
+            iconEnabledColor: themeProvider.textColor,
             onChanged: (Category? newValue) {
               setState(() {
                 selectedCategory = newValue;
@@ -183,18 +210,21 @@ class _Add_ScreenState extends State<Add_Screen> {
                       child: Image.asset(
                         'images/${category.iconName}.png',
                         errorBuilder: (context, error, stackTrace) {
-                          return Icon(Icons.category, size: 30);
+                          return Icon(Icons.category,
+                              size: 30, color: themeProvider.subtitleColor);
                         },
                       ),
                     ),
                     SizedBox(width: 10),
-                    Text(category.name, style: TextStyle(fontSize: 16)),
+                    Text(category.name,
+                        style: TextStyle(
+                            fontSize: 16, color: themeProvider.textColor)),
                   ],
                 ),
               );
             }).toList(),
-            hint: Text('Select category', style: TextStyle(color: Colors.grey)),
-            dropdownColor: Colors.white,
+            hint: Text('Select category',
+                style: TextStyle(color: themeProvider.subtitleColor)),
             isExpanded: true,
           ),
         ),
@@ -203,6 +233,8 @@ class _Add_ScreenState extends State<Add_Screen> {
   }
 
   GestureDetector save() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return GestureDetector(
       onTap: () async {
         if (selectedCategory == null ||
@@ -210,7 +242,7 @@ class _Add_ScreenState extends State<Add_Screen> {
             expalin_C.text.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Please fill in all required fields'),
+              content: Text('Please fill in all required fields'),
               backgroundColor: Colors.red,
             ),
           );
@@ -233,7 +265,7 @@ class _Add_ScreenState extends State<Add_Screen> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('บันทึกข้อมูลสำเร็จ'),
+                content: Text('Data saved successfully'),
               backgroundColor: Colors.green,
             ),
           );
@@ -242,7 +274,7 @@ class _Add_ScreenState extends State<Add_Screen> {
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('An error occurred: $e'),
+              content: Text('An error occurred: $e'),
               backgroundColor: Colors.red,
             ),
           );
@@ -252,7 +284,14 @@ class _Add_ScreenState extends State<Add_Screen> {
         alignment: Alignment.center,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
-          color: Color(0xFFFFC870),
+          color: themeProvider.primaryColor,
+          boxShadow: [
+            BoxShadow(
+              color: themeProvider.primaryColor.withOpacity(0.3),
+              blurRadius: 8,
+              offset: Offset(0, 4),
+            ),
+          ],
         ),
         width: 120,
         height: 50,
@@ -270,11 +309,14 @@ class _Add_ScreenState extends State<Add_Screen> {
   }
 
   Widget date_time() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Container(
       alignment: Alignment.bottomLeft,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(width: 2, color: Color(0xffC5C5C5)),
+        border: Border.all(width: 2, color: themeProvider.inputBorderColor),
+        color: themeProvider.inputFillColor,
       ),
       width: 300,
       child: TextButton(
@@ -284,6 +326,19 @@ class _Add_ScreenState extends State<Add_Screen> {
             initialDate: date,
             firstDate: DateTime(2020),
             lastDate: DateTime(2100),
+            builder: (context, child) {
+              return Theme(
+                data: Theme.of(context).copyWith(
+                  colorScheme: ColorScheme.light(
+                    primary: themeProvider.primaryColor,
+                    onPrimary: Colors.white,
+                    surface: themeProvider.cardColor,
+                    onSurface: themeProvider.textColor,
+                  ),
+                ),
+                child: child!,
+              );
+            },
           );
           if (newDate != null) {
             setState(() {
@@ -293,67 +348,83 @@ class _Add_ScreenState extends State<Add_Screen> {
         },
         child: Text(
           'Date : ${date.year} / ${date.day} / ${date.month}',
-          style: TextStyle(fontSize: 15, color: Colors.black),
+          style: TextStyle(fontSize: 15, color: themeProvider.textColor),
         ),
       ),
     );
   }
 
   Padding amount() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: TextField(
         keyboardType: TextInputType.number,
         focusNode: amount_,
         controller: amount_c,
+        style: TextStyle(color: themeProvider.textColor),
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
           labelText: 'amount',
-          labelStyle: TextStyle(fontSize: 17, color: Colors.grey.shade500),
+          labelStyle:
+              TextStyle(fontSize: 17, color: themeProvider.subtitleColor),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(width: 2, color: Color(0xffC5C5C5)),
+            borderSide:
+                BorderSide(width: 2, color: themeProvider.inputBorderColor),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(width: 2, color: Color(0xFFFFC870)),
+            borderSide: BorderSide(width: 2, color: themeProvider.primaryColor),
           ),
+          filled: true,
+          fillColor: themeProvider.inputFillColor,
         ),
       ),
     );
   }
 
   Padding explain() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: TextField(
         focusNode: ex,
         controller: expalin_C,
+        style: TextStyle(color: themeProvider.textColor),
         decoration: InputDecoration(
           contentPadding: EdgeInsets.symmetric(horizontal: 15, vertical: 15),
           labelText: 'explain',
-          labelStyle: TextStyle(fontSize: 17, color: Colors.grey.shade500),
+          labelStyle:
+              TextStyle(fontSize: 17, color: themeProvider.subtitleColor),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(width: 2, color: Color(0xffC5C5C5)),
+            borderSide:
+                BorderSide(width: 2, color: themeProvider.inputBorderColor),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide(width: 2, color: Color(0xFFFFC870)),
+            borderSide: BorderSide(width: 2, color: themeProvider.primaryColor),
           ),
+          filled: true,
+          fillColor: themeProvider.inputFillColor,
         ),
       ),
     );
   }
 
   Column background_container(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Column(
       children: [
         Container(
           width: double.infinity,
           height: 240,
           decoration: BoxDecoration(
-            color: Color(0xFFFFC870),
+            color: themeProvider.primaryColor,
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(20),
               bottomRight: Radius.circular(20),

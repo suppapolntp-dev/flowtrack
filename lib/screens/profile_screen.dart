@@ -1,5 +1,7 @@
-// lib/screens/profile_screen.dart
+// lib/screens/profile_screen.dart - Updated with Theme Support (Complete)
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:flowtrack/providers/theme_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -9,17 +11,32 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
-  
+
   bool isLoading = true;
   bool isSaving = false;
+
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
+    _animationController = AnimationController(
+      duration: Duration(milliseconds: 600),
+      vsync: this,
+    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeIn,
+    ));
     _loadUserData();
   }
 
@@ -27,16 +44,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       setState(() {
-        nameController.text = prefs.getString('user_name') ?? 'Mr.Suppapol Tabudda';
-        emailController.text = prefs.getString('user_email') ?? 'user@email.com';
+        nameController.text =
+            prefs.getString('user_name') ?? 'Mr.Suppapol Tabudda';
+        emailController.text =
+            prefs.getString('user_email') ?? 'user@email.com';
         phoneController.text = prefs.getString('user_phone') ?? '';
         isLoading = false;
       });
+      _animationController.forward();
     } catch (e) {
       print('Error loading user data: $e');
       setState(() {
         isLoading = false;
       });
+      _animationController.forward();
     }
   }
 
@@ -50,18 +71,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
       await prefs.setString('user_name', nameController.text);
       await prefs.setString('user_email', emailController.text);
       await prefs.setString('user_phone', phoneController.text);
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Profile updated successfully!'),
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Profile updated successfully!'),
+            ],
+          ),
           backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error saving profile: $e'),
+          content: Row(
+            children: [
+              Icon(Icons.error, color: Colors.white),
+              SizedBox(width: 8),
+              Expanded(child: Text('Error saving profile: $e')),
+            ],
+          ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
         ),
       );
     }
@@ -73,41 +114,77 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Scaffold(
-      backgroundColor: Colors.grey.shade50,
+      backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
         title: Text('Profile Settings'),
-        backgroundColor: Color(0xFFFFC870),
+        backgroundColor: themeProvider.primaryColor,
         elevation: 0,
+        
       ),
       body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              padding: EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  _buildProfileImage(),
-                  SizedBox(height: 30),
-                  _buildForm(),
-                  SizedBox(height: 30),
-                  _buildSaveButton(),
-                ],
+          ? Center(
+              child: CircularProgressIndicator(
+                color: themeProvider.primaryColor,
+              ),
+            )
+          : FadeTransition(
+              opacity: _fadeAnimation,
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    _buildProfileImage(),
+                    SizedBox(height: 30),
+                    _buildForm(),
+                    SizedBox(height: 30),
+                    _buildSaveButton(),
+                    SizedBox(height: 20),
+                    // _buildAdditionalOptions(),
+                  ],
+                ),
               ),
             ),
     );
   }
 
   Widget _buildProfileImage() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Center(
       child: Stack(
         children: [
-          CircleAvatar(
-            radius: 60,
-            backgroundColor: Color(0xFFFFC870).withOpacity(0.2),
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  themeProvider.primaryColor.withOpacity(0.2),
+                  themeProvider.primaryColor.withOpacity(0.1),
+                ],
+              ),
+              border: Border.all(
+                color: themeProvider.primaryColor.withOpacity(0.3),
+                width: 3,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: themeProvider.primaryColor.withOpacity(0.2),
+                  blurRadius: 20,
+                  offset: Offset(0, 10),
+                ),
+              ],
+            ),
             child: Icon(
               Icons.person,
-              size: 80,
-              color: Color(0xFFFFC870),
+              size: 60,
+              color: themeProvider.primaryColor,
             ),
           ),
           Positioned(
@@ -116,14 +193,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Container(
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Color(0xFFFFC870),
+                color: themeProvider.primaryColor,
                 shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: themeProvider.primaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: Offset(0, 2),
+                  ),
+                ],
               ),
-              child: Icon(
-                Icons.camera_alt,
-                color: Colors.white,
-                size: 20,
-              ),
+            
             ),
           ),
         ],
@@ -140,19 +220,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
           icon: Icons.person,
         ),
         SizedBox(height: 16),
-        _buildTextField(
-          controller: emailController,
-          label: 'Email',
-          icon: Icons.email,
-          keyboardType: TextInputType.emailAddress,
-        ),
+        
         SizedBox(height: 16),
-        _buildTextField(
-          controller: phoneController,
-          label: 'Phone Number',
-          icon: Icons.phone,
-          keyboardType: TextInputType.phone,
-        ),
       ],
     );
   }
@@ -163,13 +232,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required IconData icon,
     TextInputType? keyboardType,
   }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: themeProvider.isDarkMode
+                ? Colors.black26
+                : Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: Offset(0, 2),
           ),
@@ -178,15 +251,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
+        style: TextStyle(color: themeProvider.textColor),
         decoration: InputDecoration(
           labelText: label,
-          prefixIcon: Icon(icon, color: Color(0xFFFFC870)),
+          labelStyle: TextStyle(color: themeProvider.subtitleColor),
+          prefixIcon: Icon(icon, color: themeProvider.primaryColor),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: themeProvider.dividerColor.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide(
+              color: themeProvider.primaryColor,
+              width: 2,
+            ),
+          ),
           filled: true,
-          fillColor: Colors.white,
+          fillColor: themeProvider.cardColor,
           contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),
       ),
@@ -194,27 +283,43 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildSaveButton() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
     return SizedBox(
       width: double.infinity,
       height: 50,
       child: ElevatedButton(
         onPressed: isSaving ? null : _saveUserData,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Color(0xFFFFC870),
+          backgroundColor: themeProvider.primaryColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
           elevation: 2,
         ),
         child: isSaving
-            ? CircularProgressIndicator(color: Colors.white)
-            : Text(
-                'Save Changes',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+            ? SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
                   color: Colors.white,
+                  strokeWidth: 2,
                 ),
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.save, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text(
+                    'Save Changes',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
       ),
     );
@@ -222,6 +327,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   void dispose() {
+    _animationController.dispose();
     nameController.dispose();
     emailController.dispose();
     phoneController.dispose();
