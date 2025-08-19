@@ -1,7 +1,7 @@
-// lib/screens/budget_screen.dart - Updated with Theme Support
+// lib/screens/budget_screen.dart - Updated with Gradient Support
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 
@@ -93,8 +93,12 @@ class _BudgetScreenState extends State<BudgetScreen> {
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
         title: Text('Budget Settings'),
-        backgroundColor: themeProvider.primaryColor,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: themeProvider.primaryGradient,
+          ),
+        ),
       ),
       body: isLoading
           ? Center(child: CircularProgressIndicator(
@@ -139,9 +143,16 @@ class _BudgetScreenState extends State<BudgetScreen> {
         ),
         child: Column(
           children: [
-            Icon(Icons.account_balance_wallet, 
-                size: 60, 
-                color: themeProvider.subtitleColor),
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: themeProvider.primaryGradient,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.account_balance_wallet, 
+                  size: 40, 
+                  color: Colors.white),
+            ),
             SizedBox(height: 16),
             Text('No Budget Set',
                 style: TextStyle(
@@ -192,11 +203,27 @@ class _BudgetScreenState extends State<BudgetScreen> {
             ],
           ),
           SizedBox(height: 10),
-          Text('\฿${monthlyBudget.toStringAsFixed(2)}',
-              style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: themeProvider.primaryColor)),
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: themeProvider.primaryGradient,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Column(
+              children: [
+                Text('\฿${monthlyBudget.toStringAsFixed(2)}',
+                    style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+                SizedBox(height: 8),
+                Text('Monthly Budget',
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white.withOpacity(0.9))),
+              ],
+            ),
+          ),
           SizedBox(height: 20),
           Column(
             children: [
@@ -327,10 +354,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
         Container(
           padding: EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: themeProvider.primaryColor.withOpacity(0.1),
+            gradient: themeProvider.primaryGradient,
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(icon, color: themeProvider.primaryColor),
+          child: Icon(icon, color: Colors.white),
         ),
         SizedBox(height: 8),
         Text(period,
@@ -394,19 +421,26 @@ class _BudgetScreenState extends State<BudgetScreen> {
             ),
           ),
           SizedBox(height: 15),
-          SizedBox(
+          Container(
             width: double.infinity,
             height: 50,
+            decoration: BoxDecoration(
+              gradient: themeProvider.primaryGradient,
+              borderRadius: BorderRadius.circular(10),
+            ),
             child: ElevatedButton(
               onPressed: _saveBudget,
               style: ElevatedButton.styleFrom(
-                backgroundColor: themeProvider.primaryColor,
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10)),
               ),
               child: Text('Update Budget',
                   style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.w600)),
+                      color: Colors.white, 
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16)),
             ),
           ),
         ],
@@ -420,23 +454,37 @@ class _BudgetScreenState extends State<BudgetScreen> {
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.blue.shade50.withOpacity(themeProvider.isDarkMode ? 0.1 : 1),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            themeProvider.primaryColor.withOpacity(0.1),
+            themeProvider.primaryColor.withOpacity(0.05),
+          ],
+        ),
         borderRadius: BorderRadius.circular(15),
         border: Border.all(
-            color: Colors.blue.shade200.withOpacity(themeProvider.isDarkMode ? 0.3 : 1)),
+            color: themeProvider.primaryColor.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.lightbulb, color: Colors.blue.shade600),
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: themeProvider.primaryGradient,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.lightbulb, color: Colors.white, size: 20),
+              ),
               SizedBox(width: 8),
               Text('Budget Tips',
                   style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade600)),
+                      color: themeProvider.primaryColor)),
             ],
           ),
           SizedBox(height: 10),
@@ -445,7 +493,10 @@ class _BudgetScreenState extends State<BudgetScreen> {
             '• Track your expenses regularly\n'
             '• Leave room for unexpected expenses\n'
             '• Review and adjust monthly',
-            style: TextStyle(color: Colors.blue.shade700, height: 1.5),
+            style: TextStyle(
+              color: themeProvider.textColor.withOpacity(0.8), 
+              height: 1.5
+            ),
           ),
         ],
       ),

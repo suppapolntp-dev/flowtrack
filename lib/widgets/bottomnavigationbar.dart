@@ -1,7 +1,7 @@
-// lib/widgets/bottomnavigationbar.dart - Updated with Theme Support
+// lib/widgets/bottomnavigationbar.dart - Updated with Gradient FAB
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart';
 import 'package:flowtrack/screens/add.dart';
 import 'package:flowtrack/screens/home.dart';
 import 'package:flutter/services.dart';
@@ -23,11 +23,10 @@ class _BottomState extends State<Bottom> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    // บรรทัด 20-30 ใน bottomnavigationbar.dart
     List<Widget> screens = [
       Home(onNavigateToWallet: (index) {
         setState(() {
-          index_color = index; // เปลี่ยนไป tab ที่ระบุ
+          index_color = index;
         });
       }),
       Statistics(),
@@ -41,18 +40,23 @@ class _BottomState extends State<Bottom> {
         children: screens,
       ),
       floatingActionButton: Container(
+        width: 64,
+        height: 64,
         decoration: BoxDecoration(
+          gradient: themeProvider.primaryGradient,
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: themeProvider.primaryColor.withOpacity(0.3),
-              blurRadius: 12,
-              offset: Offset(0, 6),
+              color: themeProvider.primaryColor.withOpacity(0.4),
+              blurRadius: 16,
+              offset: Offset(0, 8),
+              spreadRadius: 2,
             ),
           ],
         ),
         child: FloatingActionButton(
           onPressed: () {
+            HapticFeedback.mediumImpact();
             Navigator.push(
               context,
               PageRouteBuilder(
@@ -60,39 +64,42 @@ class _BottomState extends State<Bottom> {
                     Add_Screen(),
                 transitionsBuilder:
                     (context, animation, secondaryAnimation, child) {
-                  const begin = Offset(0.0, 1.0);
-                  const end = Offset.zero;
-                  const curve = Curves.easeInOut;
-
-                  var tween = Tween(begin: begin, end: end).chain(
-                    CurveTween(curve: curve),
-                  );
-
                   return SlideTransition(
-                    position: animation.drive(tween),
-                    child: child,
+                    position: animation.drive(
+                      Tween(
+                        begin: Offset(0.0, 1.0),
+                        end: Offset.zero,
+                      ).chain(CurveTween(curve: Curves.easeInOut)),
+                    ),
+                    child: FadeTransition(
+                      opacity: animation,
+                      child: child,
+                    ),
                   );
                 },
               ),
             );
           },
-          backgroundColor: themeProvider.primaryColor,
+          backgroundColor: Colors.transparent,
           elevation: 0,
-          child:
-              Icon(Icons.add, color: Colors.white, size: 28), // เพิ่มขนาด icon
-          // mini: false, // ใช้ FAB ขนาดปกติ (ใหญ่ขึ้น)
+          highlightElevation: 0,
+          child: Icon(
+            Icons.add,
+            color: Colors.white,
+            size: 32,
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: BottomAppBar(
         color: themeProvider.cardColor,
         shape: CircularNotchedRectangle(),
-        notchMargin: 6,
-        elevation: 6,
+        notchMargin: 8,
+        elevation: 8,
         shadowColor: themeProvider.isDarkMode
-            ? Colors.black
+            ? Colors.black.withOpacity(0.3)
             : Colors.grey.withOpacity(0.2),
-        height: 100, // ปรับความสูง navbar ให้สมส่วนกับ icon
+        height: 100,
         child: Container(
           decoration: BoxDecoration(
             border: Border(
@@ -107,7 +114,7 @@ class _BottomState extends State<Bottom> {
             children: [
               _buildNavItem(Icons.home_rounded, 'Home', 0),
               _buildNavItem(Icons.bar_chart_rounded, 'Stats', 1),
-              SizedBox(width: 64), // เพิ่มช่องว่าง FAB ให้สมส่วน
+              SizedBox(width: 80), // Space for FAB
               _buildNavItem(Icons.wallet_rounded, 'Wallet', 2),
               _buildNavItem(Icons.person_rounded, 'Profile', 3),
             ],
@@ -127,37 +134,49 @@ class _BottomState extends State<Bottom> {
         HapticFeedback.lightImpact();
       },
       child: AnimatedContainer(
-        duration: Duration(milliseconds: 200),
-        padding: EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             AnimatedContainer(
-              duration: Duration(milliseconds: 200),
-              padding: EdgeInsets.all(isSelected ? 8 : 4),
+              duration: Duration(milliseconds: 300),
+              padding: EdgeInsets.all(isSelected ? 10 : 6),
               decoration: BoxDecoration(
+                gradient: isSelected ? themeProvider.primaryGradient : null,
                 color: isSelected
-                    ? themeProvider.primaryColor.withOpacity(0.12)
+                    ? null
                     : Colors.transparent,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(14),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: themeProvider.primaryColor.withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: Offset(0, 4),
+                        ),
+                      ]
+                    : null,
               ),
               child: Icon(
                 icon,
                 color: isSelected
-                    ? themeProvider.primaryColor
+                    ? Colors.white
                     : themeProvider.subtitleColor,
-                size: isSelected ? 20 : 16,
+                size: isSelected ? 22 : 18,
               ),
             ),
-            SizedBox(height: 4),
+            SizedBox(height: 6),
             AnimatedDefaultTextStyle(
-              duration: Duration(milliseconds: 200),
+              duration: Duration(milliseconds: 300),
               style: TextStyle(
                 color: isSelected
                     ? themeProvider.primaryColor
                     : themeProvider.subtitleColor,
                 fontSize: isSelected ? 12 : 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                letterSpacing: isSelected ? 0.5 : 0,
               ),
               child: Text(label),
             ),
@@ -167,5 +186,3 @@ class _BottomState extends State<Bottom> {
     );
   }
 }
-
-// Add HapticFeedback import if not already present

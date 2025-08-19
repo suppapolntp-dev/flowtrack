@@ -1,31 +1,31 @@
+// lib/main.dart - Fixed Version with No Errors
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/widgets/bottomnavigationbar.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 import 'package:flowtrack/data/migration_helper.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart'; // Gradient ThemeProvider
 import 'package:flowtrack/providers/user_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   try {
     await DatabaseService.init();
     await MigrationHelper.migrateOldData();
   } catch (e) {
     print('Database error: $e');
   }
-  
-  runApp(
-  MultiProvider(
-    providers: [
-      ChangeNotifierProvider(create: (_) => ThemeProvider()..loadTheme()),
-      ChangeNotifierProvider(create: (_) => UserProvider()..loadUserData()), // เพิ่ม
-    ],
-    child: const FlowTrackApp(),
-  ),
-);
 
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeProvider()..loadTheme()),
+        ChangeNotifierProvider(create: (_) => UserProvider()..loadUserData()),
+      ],
+      child: const FlowTrackApp(),
+    ),
+  );
 }
 
 class FlowTrackApp extends StatelessWidget {
@@ -33,81 +33,222 @@ class FlowTrackApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => ThemeProvider()..loadTheme(),
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'FlowTrack',
-            theme: _buildTheme(themeProvider.primaryColor, false),
-            darkTheme: _buildTheme(themeProvider.primaryColor, true),
-            themeMode: themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            home: Bottom(),
-          );
-        },
-      ),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'FlowTrack',
+          theme: _buildTheme(themeProvider, false),
+          darkTheme: _buildTheme(themeProvider, true),
+          themeMode:
+              themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          home: Bottom(),
+        );
+      },
     );
   }
 
-  ThemeData _buildTheme(Color primaryColor, bool isDark) {
+  ThemeData _buildTheme(ThemeProvider themeProvider, bool isDark) {
+    final primaryColor = themeProvider.primaryColor;
+    final currentTheme = themeProvider.currentTheme;
+
     return ThemeData(
       brightness: isDark ? Brightness.dark : Brightness.light,
       primaryColor: primaryColor,
+
+      // Color Scheme with Gradient Support
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
         brightness: isDark ? Brightness.dark : Brightness.light,
       ),
-      scaffoldBackgroundColor: isDark ? Colors.grey.shade900 : Colors.grey.shade50,
-      
+
+      // Background Colors
+      scaffoldBackgroundColor: themeProvider.backgroundColor,
+
       // AppBar Theme
       appBarTheme: AppBarTheme(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: true,
+        titleTextStyle: TextStyle(
+          color: Colors.white,
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+        ),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
-      
-      // FloatingActionButton Theme
+
+      // FloatingActionButton
       floatingActionButtonTheme: FloatingActionButtonThemeData(
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
+        elevation: 6,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
       ),
-      
-      // ElevatedButton Theme
+
+      // ElevatedButton
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
+          elevation: 2,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
-      
+
       // Card Theme
       cardTheme: CardThemeData(
-        color: isDark ? Colors.grey.shade800 : Colors.white,
+        color: themeProvider.cardColor,
         elevation: 2,
+        shadowColor: isDark
+            ? Colors.black.withOpacity(0.3)
+            : Colors.grey.withOpacity(0.1),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
         ),
       ),
-      
-      // Removed unsupported containerColor parameter
-      
+
+      // Input Decoration
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: themeProvider.inputFillColor,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: themeProvider.inputBorderColor),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: themeProvider.inputBorderColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: primaryColor, width: 2),
+        ),
+        labelStyle: TextStyle(color: themeProvider.subtitleColor),
+        hintStyle: TextStyle(color: themeProvider.subtitleColor),
+      ),
+
       // Text Theme
       textTheme: TextTheme(
         headlineLarge: TextStyle(
-          color: isDark ? Colors.white : Colors.black87,
+          color: themeProvider.textColor,
           fontWeight: FontWeight.bold,
+          fontSize: 32,
+        ),
+        headlineMedium: TextStyle(
+          color: themeProvider.textColor,
+          fontWeight: FontWeight.bold,
+          fontSize: 28,
+        ),
+        headlineSmall: TextStyle(
+          color: themeProvider.textColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 24,
+        ),
+        titleLarge: TextStyle(
+          color: themeProvider.textColor,
+          fontWeight: FontWeight.w600,
+          fontSize: 20,
+        ),
+        titleMedium: TextStyle(
+          color: themeProvider.textColor,
+          fontWeight: FontWeight.w500,
+          fontSize: 16,
         ),
         bodyLarge: TextStyle(
-          color: isDark ? Colors.white : Colors.black87,
+          color: themeProvider.textColor,
+          fontSize: 16,
         ),
         bodyMedium: TextStyle(
-          color: isDark ? Colors.grey.shade300 : Colors.grey.shade700,
+          color: themeProvider.textColor,
+          fontSize: 14,
         ),
+        bodySmall: TextStyle(
+          color: themeProvider.subtitleColor,
+          fontSize: 12,
+        ),
+      ),
+
+      // Icon Theme
+      iconTheme: IconThemeData(
+        color: themeProvider.textColor,
+        size: 24,
+      ),
+
+      // Divider Theme
+      dividerTheme: DividerThemeData(
+        color: themeProvider.dividerColor,
+        thickness: 1,
+      ),
+
+      // Switch Theme
+      switchTheme: SwitchThemeData(
+        thumbColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
+            return primaryColor;
+          }
+          return themeProvider.subtitleColor;
+        }),
+        trackColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
+            return primaryColor.withOpacity(0.3);
+          }
+          return themeProvider.dividerColor;
+        }),
+      ),
+
+      // Checkbox Theme
+      checkboxTheme: CheckboxThemeData(
+        fillColor: MaterialStateProperty.resolveWith((states) {
+          if (states.contains(MaterialState.selected)) {
+            return primaryColor;
+          }
+          return Colors.transparent;
+        }),
+        checkColor: MaterialStateProperty.all(Colors.white),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+
+      // Progress Indicator
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: primaryColor,
+        linearTrackColor: themeProvider.dividerColor,
+        circularTrackColor: themeProvider.dividerColor,
+      ),
+
+      // Bottom Navigation
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: themeProvider.cardColor,
+        selectedItemColor: primaryColor,
+        unselectedItemColor: themeProvider.subtitleColor,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+      ),
+
+      // Snack Bar
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade700,
+        contentTextStyle: TextStyle(color: Colors.white),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        behavior: SnackBarBehavior.floating,
+      ),
+
+      // List Tile
+      listTileTheme: ListTileThemeData(
+        textColor: themeProvider.textColor,
+        iconColor: themeProvider.textColor,
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       ),
     );
   }

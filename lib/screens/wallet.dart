@@ -1,7 +1,7 @@
 // lib/screens/wallet.dart - Updated with Advanced Sorting
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 import 'package:flowtrack/data/models/category.dart';
 import 'package:flowtrack/data/models/transaction.dart';
@@ -274,7 +274,7 @@ class _WalletScreenState extends State<WalletScreen> {
       width: double.infinity,
       padding: EdgeInsets.symmetric(vertical: 20),
       decoration: BoxDecoration(
-        color: themeProvider.primaryColor,
+        gradient: themeProvider.primaryGradient,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(20),
           bottomRight: Radius.circular(20),

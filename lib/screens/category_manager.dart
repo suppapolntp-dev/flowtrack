@@ -1,7 +1,7 @@
-// lib/screens/category_manager.dart - Complete File with Long Press Drag
+// lib/screens/category_manager.dart - Updated with Gradient Support
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart';
 import 'package:flowtrack/data/models/category.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 
@@ -36,37 +36,12 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
   ];
 
   final List<String> availableIcons = [
-    'Food',
-    'Coffee',
-    'Grocery',
-    'Food-delivery',
-    'Gas-pump',
-    'Public Transport',
-    'Rent or Mortgage',
-    'Water Bill',
-    'Electricity Bill',
-    'Internet Bill',
-    'Clothes',
-    'Shoes',
-    'Accessories',
-    'Personal Care Items',
-    'Movie',
-    'Concert',
-    'Hobby',
-    'Travel',
-    'Health-Report',
-    'Doctor VisitsHospital',
-    'Education',
-    'Bank Fees',
-    'Giftbox',
-    'Donation',
-    'salary',
-    'commission',
-    'freelanceincome',
-    'dividends',
-    'interest',
-    'rentalincome',
-    'taxrefunds'
+    'Food', 'Coffee', 'Grocery', 'Food-delivery', 'Gas-pump', 'Public Transport',
+    'Rent or Mortgage', 'Water Bill', 'Electricity Bill', 'Internet Bill',
+    'Clothes', 'Shoes', 'Accessories', 'Personal Care Items', 'Movie', 'Concert',
+    'Hobby', 'Travel', 'Health-Report', 'Doctor VisitsHospital', 'Education',
+    'Bank Fees', 'Giftbox', 'Donation', 'salary', 'commission', 'freelanceincome',
+    'dividends', 'interest', 'rentalincome', 'taxrefunds'
   ];
 
   @override
@@ -78,10 +53,8 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     DatabaseService.categoryStream.listen((categories) {
       if (mounted) {
         setState(() {
-          expenseCategories =
-              categories.where((cat) => cat.type == 'Expense').toList();
-          incomeCategories =
-              categories.where((cat) => cat.type == 'Income').toList();
+          expenseCategories = categories.where((cat) => cat.type == 'Expense').toList();
+          incomeCategories = categories.where((cat) => cat.type == 'Income').toList();
         });
       }
     });
@@ -149,8 +122,12 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
         title: const Text('Category Manager'),
-        backgroundColor: themeProvider.primaryColor,
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: themeProvider.primaryGradient,
+          ),
+        ),
         actions: [
           Container(
             margin: EdgeInsets.only(right: 8),
@@ -202,11 +179,25 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                 _buildCategoryList(incomeCategories, 'Income'),
               ],
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddCategoryDialog(),
-        backgroundColor: themeProvider.primaryColor,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: Text('Add Category', style: TextStyle(color: Colors.white)),
+      floatingActionButton: Container(
+        decoration: BoxDecoration(
+          gradient: themeProvider.primaryGradient,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: themeProvider.primaryColor.withOpacity(0.3),
+              blurRadius: 12,
+              offset: Offset(0, 6),
+            ),
+          ],
+        ),
+        child: FloatingActionButton.extended(
+          onPressed: () => _showAddCategoryDialog(),
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          icon: const Icon(Icons.add, color: Colors.white),
+          label: Text('Add Category', style: TextStyle(color: Colors.white)),
+        ),
       ),
     );
   }
@@ -219,12 +210,19 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-                type == 'Expense'
-                    ? Icons.remove_circle_outline
-                    : Icons.add_circle_outline,
-                size: 80,
-                color: themeProvider.subtitleColor),
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: themeProvider.primaryGradient,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                  type == 'Expense'
+                      ? Icons.remove_circle_outline
+                      : Icons.add_circle_outline,
+                  size: 40,
+                  color: Colors.white),
+            ),
             SizedBox(height: 16),
             Text('No ${type.toLowerCase()} categories',
                 style: TextStyle(
@@ -292,15 +290,23 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.drag_handle_rounded,
-                    color: themeProvider.primaryColor,
-                    size: 24,
+                  Container(
+                    padding: EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      gradient: themeProvider.primaryGradient,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.drag_handle_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                   ),
+                  SizedBox(height: 4),
                   Text(
                     'HOLD',
                     style: TextStyle(
-                      fontSize: 9,
+                      fontSize: 8,
                       color: themeProvider.primaryColor,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1,
@@ -352,13 +358,13 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: themeProvider.primaryColor.withOpacity(0.1),
+                          gradient: themeProvider.primaryGradient,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           category.type,
                           style: TextStyle(
-                            color: themeProvider.primaryColor,
+                            color: Colors.white,
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
@@ -457,13 +463,13 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
-                          color: themeProvider.primaryColor.withOpacity(0.1),
+                          gradient: themeProvider.primaryGradient,
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
                           category.type,
                           style: TextStyle(
-                            color: themeProvider.primaryColor,
+                            color: Colors.white,
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
@@ -585,12 +591,12 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
               Container(
                 padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: themeProvider.primaryColor.withOpacity(0.1),
+                  gradient: themeProvider.primaryGradient,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
                   isEditing ? Icons.edit : Icons.add_circle,
-                  color: themeProvider.primaryColor,
+                  color: Colors.white,
                 ),
               ),
               SizedBox(width: 12),
@@ -673,8 +679,14 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.palette, 
-                                color: themeProvider.primaryColor, size: 20),
+                            Container(
+                              padding: EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                gradient: themeProvider.primaryGradient,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Icon(Icons.palette, color: Colors.white, size: 16),
+                            ),
                             SizedBox(width: 8),
                             Text('Select Color',
                                 style: TextStyle(
@@ -735,8 +747,14 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.category, 
-                                color: themeProvider.primaryColor, size: 20),
+                            Container(
+                              padding: EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                gradient: themeProvider.primaryGradient,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Icon(Icons.category, color: Colors.white, size: 16),
+                            ),
                             SizedBox(width: 8),
                             Text('Select Icon',
                                 style: TextStyle(
@@ -800,17 +818,24 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                 onPressed: () => Navigator.pop(context),
                 child: Text('Cancel',
                     style: TextStyle(color: themeProvider.subtitleColor))),
-            ElevatedButton(
-              onPressed: () => _saveCategory(category, nameController.text,
-                  selectedIcon, selectedColor, type, budgetController.text),
-              style: ElevatedButton.styleFrom(
-                  backgroundColor: themeProvider.primaryColor,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10))),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Text(isEditing ? 'Update' : 'Add',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+            Container(
+              decoration: BoxDecoration(
+                gradient: themeProvider.primaryGradient,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: ElevatedButton(
+                onPressed: () => _saveCategory(category, nameController.text,
+                    selectedIcon, selectedColor, type, budgetController.text),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10))),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text(isEditing ? 'Update' : 'Add',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                ),
               ),
             ),
           ],
@@ -894,16 +919,23 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
               onPressed: () => Navigator.pop(context),
               child: Text('Cancel',
                   style: TextStyle(color: themeProvider.subtitleColor))),
-          ElevatedButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _deleteCategory(category);
-            },
-            style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10))),
-            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: ElevatedButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await _deleteCategory(category);
+              },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10))),
+              child: const Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
           ),
         ],
       ),

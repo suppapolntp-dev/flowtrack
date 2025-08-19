@@ -1,7 +1,7 @@
-// lib/screens/add.dart - Updated with Theme Support
+// lib/screens/add.dart - Updated with Full Gradient Support
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 import 'package:flowtrack/data/models/transaction.dart';
 import 'package:flowtrack/data/models/category.dart';
@@ -15,8 +15,8 @@ class Add_Screen extends StatefulWidget {
 
 class _Add_ScreenState extends State<Add_Screen> {
   DateTime date = DateTime.now();
-  Category? selectedCategory; // ตัวแปรนี้ใช้เก็บหมวดหมู่ที่ถูกเลือกใน Dropdown
-  String selectedType = "Expense"; // เริ่มต้นเป็น Expense
+  Category? selectedCategory;
+  String selectedType = "Expense";
   final TextEditingController expalin_C = TextEditingController();
   FocusNode ex = FocusNode();
   final TextEditingController amount_c = TextEditingController();
@@ -40,7 +40,6 @@ class _Add_ScreenState extends State<Add_Screen> {
   void _loadCategories() {
     setState(() {
       availableCategories = DatabaseService.getCategories(type: selectedType);
-      // เลือกหมวดหมู่แรกเป็นค่าเริ่มต้น
       if (availableCategories.isNotEmpty) {
         selectedCategory = availableCategories.first;
       }
@@ -77,8 +76,8 @@ class _Add_ScreenState extends State<Add_Screen> {
             color: themeProvider.isDarkMode
                 ? Colors.black26
                 : Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: Offset(0, 5),
+            blurRadius: 15,
+            offset: Offset(0, 8),
           ),
         ],
       ),
@@ -118,22 +117,37 @@ class _Add_ScreenState extends State<Add_Screen> {
                       onTap: () {
                         setState(() {
                           selectedType = item;
-                          _loadCategories(); // โหลดหมวดหมู่ใหม่ตามประเภท
+                          _loadCategories();
                         });
                       },
-                      child: Container(
+                      child: AnimatedContainer(
+                        duration: Duration(milliseconds: 300),
                         padding:
                             EdgeInsets.symmetric(horizontal: 15, vertical: 15),
                         decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(
-                              width: 2,
-                              color: selectedType == item
-                                  ? themeProvider.primaryColor
-                                  : themeProvider.inputBorderColor),
+                          gradient: selectedType == item
+                              ? themeProvider.primaryGradient
+                              : null,
                           color: selectedType == item
-                              ? themeProvider.primaryColor.withOpacity(0.1)
+                              ? null
                               : themeProvider.inputFillColor,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            width: 2,
+                            color: selectedType == item
+                                ? Colors.transparent
+                                : themeProvider.inputBorderColor,
+                          ),
+                          boxShadow: selectedType == item
+                              ? [
+                                  BoxShadow(
+                                    color: themeProvider.primaryColor
+                                        .withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ]
+                              : null,
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -142,19 +156,22 @@ class _Add_ScreenState extends State<Add_Screen> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   color: selectedType == item
-                                      ? themeProvider.primaryColor
+                                      ? Colors.white
                                       : themeProvider.textColor,
                                   fontWeight: selectedType == item
                                       ? FontWeight.bold
                                       : FontWeight.normal,
                                 )),
                             SizedBox(width: 5),
-                            if (selectedType == item)
-                              Icon(Icons.check_circle,
-                                  color: themeProvider.primaryColor, size: 20)
-                            else
-                              Icon(Icons.radio_button_unchecked,
-                                  color: themeProvider.subtitleColor, size: 20),
+                            Icon(
+                              selectedType == item
+                                  ? Icons.check_circle
+                                  : Icons.radio_button_unchecked,
+                              color: selectedType == item
+                                  ? Colors.white
+                                  : themeProvider.subtitleColor,
+                              size: 20,
+                            ),
                           ],
                         ),
                       ),
@@ -232,7 +249,7 @@ class _Add_ScreenState extends State<Add_Screen> {
     );
   }
 
-  GestureDetector save() {
+  Widget save() {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return GestureDetector(
@@ -265,7 +282,7 @@ class _Add_ScreenState extends State<Add_Screen> {
 
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text('Data saved successfully'),
+              content: Text('Data saved successfully'),
               backgroundColor: Colors.green,
             ),
           );
@@ -283,25 +300,25 @@ class _Add_ScreenState extends State<Add_Screen> {
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
+          gradient: themeProvider.primaryGradient,
           borderRadius: BorderRadius.circular(15),
-          color: themeProvider.primaryColor,
           boxShadow: [
             BoxShadow(
-              color: themeProvider.primaryColor.withOpacity(0.3),
-              blurRadius: 8,
-              offset: Offset(0, 4),
+              color: themeProvider.primaryColor.withOpacity(0.4),
+              blurRadius: 12,
+              offset: Offset(0, 6),
             ),
           ],
         ),
-        width: 120,
-        height: 50,
+        width: 140,
+        height: 55,
         child: Text(
           'Save',
           style: TextStyle(
             fontFamily: 'f',
             fontWeight: FontWeight.w600,
             color: Colors.white,
-            fontSize: 17,
+            fontSize: 18,
           ),
         ),
       ),
@@ -424,11 +441,18 @@ class _Add_ScreenState extends State<Add_Screen> {
           width: double.infinity,
           height: 240,
           decoration: BoxDecoration(
-            color: themeProvider.primaryColor,
+            gradient: themeProvider.primaryGradient,
             borderRadius: BorderRadius.only(
               bottomLeft: Radius.circular(20),
               bottomRight: Radius.circular(20),
             ),
+            boxShadow: [
+              BoxShadow(
+                color: themeProvider.primaryColor.withOpacity(0.3),
+                blurRadius: 15,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -439,21 +463,58 @@ class _Add_ScreenState extends State<Add_Screen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.of(context).pop();
-                      },
-                      child: Icon(Icons.arrow_back, color: Colors.white),
-                    ),
-                    Text(
-                      'Adding',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                        icon: Icon(Icons.arrow_back, color: Colors.white),
                       ),
                     ),
-                    Icon(Icons.attach_file_outlined, color: Colors.white),
+                    Column(
+                      children: [
+                        Text(
+                          'Adding',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 4),
+                        Container(
+                          padding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            themeProvider.currentTheme.name,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.white,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.attach_file_outlined,
+                            color: Colors.white),
+                      ),
+                    ),
                   ],
                 ),
               ),

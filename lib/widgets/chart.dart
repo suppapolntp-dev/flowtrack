@@ -1,7 +1,7 @@
 // lib/widgets/chart.dart - Updated with Theme Support
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart';
 import 'package:flowtrack/data/models/transaction.dart';
 import 'package:flowtrack/data/utlity.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';

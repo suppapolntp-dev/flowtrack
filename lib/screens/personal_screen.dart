@@ -1,10 +1,9 @@
-// lib/screens/personal_screen.dart - Updated with Theme Support
+// lib/screens/personal_screen.dart - Updated with Gradient Theme Support
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'profile_screen.dart';
-import 'theme_settings.dart';
 import 'budget_screen.dart';
 import 'export_screen.dart';
 import 'category_manager.dart';
@@ -22,7 +21,6 @@ class _PersonalScreenState extends State<PersonalScreen>
   late Animation<double> _fadeAnimation;
 
   String userName = 'User';
-  // String userEmail = 'user@email.com';
   bool isLoading = true;
 
   @override
@@ -49,7 +47,6 @@ class _PersonalScreenState extends State<PersonalScreen>
       SharedPreferences prefs = await SharedPreferences.getInstance();
       setState(() {
         userName = prefs.getString('user_name') ?? 'Mr.Suppapol Tabudda';
-        // userEmail = prefs.getString('user_email') ?? 'user@email.com';
         isLoading = false;
       });
       _animationController.forward();
@@ -75,9 +72,10 @@ class _PersonalScreenState extends State<PersonalScreen>
       return Scaffold(
         backgroundColor: themeProvider.backgroundColor,
         body: Center(
-            child: CircularProgressIndicator(
-          color: themeProvider.primaryColor,
-        )),
+          child: CircularProgressIndicator(
+            color: themeProvider.primaryColor,
+          ),
+        ),
       );
     }
 
@@ -89,7 +87,7 @@ class _PersonalScreenState extends State<PersonalScreen>
           child: SingleChildScrollView(
             child: Column(
               children: [
-                _buildModernHeader(),
+                _buildGradientHeader(),
                 SizedBox(height: 20),
                 _buildMenuList(),
                 SizedBox(height: 20),
@@ -102,22 +100,14 @@ class _PersonalScreenState extends State<PersonalScreen>
     );
   }
 
-  Widget _buildModernHeader() {
+  Widget _buildGradientHeader() {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Container(
       width: double.infinity,
       padding: EdgeInsets.all(30),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            themeProvider.primaryColor,
-            themeProvider.primaryColor.withOpacity(0.8),
-            themeProvider.primaryColor.withOpacity(0.6),
-          ],
-        ),
+        gradient: themeProvider.primaryGradient,
         borderRadius: BorderRadius.only(
           bottomLeft: Radius.circular(35),
           bottomRight: Radius.circular(35),
@@ -166,48 +156,49 @@ class _PersonalScreenState extends State<PersonalScreen>
                       ),
                     ),
                     SizedBox(height: 4),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        themeProvider.currentTheme.name,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.white,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
-
           SizedBox(height: 25),
+          
+          // Theme Preview Bar
+          Container(
+            height: 8,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.3),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.white.withOpacity(0.8),
+                    Colors.white.withOpacity(0.6),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+          ),
         ],
       ),
-    );
-  }
-
-  Widget _buildQuickStat(String label, String value, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.white.withOpacity(0.9), size: 20),
-        SizedBox(height: 6),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            color: Colors.white.withOpacity(0.8),
-          ),
-          textAlign: TextAlign.center,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildVerticalDivider() {
-    return Container(
-      height: 40,
-      width: 1,
-      color: Colors.white.withOpacity(0.3),
     );
   }
 
@@ -219,39 +210,39 @@ class _PersonalScreenState extends State<PersonalScreen>
         'icon': Icons.person,
         'title': 'Profile Settings',
         'subtitle': 'Edit your personal information',
-        'color': Colors.blue,
+        'gradient': [Color(0xFF4FC3F7), Color(0xFF29B6F6)],
         'screen': ProfileScreen(),
       },
       {
         'icon': Icons.category,
         'title': 'Category Manager',
         'subtitle': 'Manage income and expense categories',
-        'color': Colors.purple,
+        'gradient': [Color(0xFFBA68C8), Color(0xFF9C27B0)],
         'screen': CategoryManagerScreen(),
       },
       {
         'icon': Icons.palette,
-        'title': 'Theme Settings',
-        'subtitle': 'Customize app appearance',
-        'color': Colors.pink,
+        'title': 'Theme Gallery',
+        'subtitle': 'Choose from 20+ beautiful gradients',
+        'gradient': themeProvider.currentTheme.colors,
         'screen': ThemeSettingsScreen(),
       },
       {
         'icon': Icons.account_balance_wallet,
         'title': 'Budget Settings',
         'subtitle': 'Set monthly spending limits',
-        'color': Colors.green,
+        'gradient': [Color(0xFF66BB6A), Color(0xFF4CAF50)],
         'screen': BudgetScreen(),
       },
       {
         'icon': Icons.file_download,
         'title': 'Export Data',
         'subtitle': 'Save your data as CSV or JSON',
-        'color': Colors.orange,
+        'gradient': [Color(0xFFFFB74D), Color(0xFFFF9800)],
         'screen': ExportScreen(),
       }
     ];
-  
+
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 20),
       child: Column(
@@ -265,21 +256,19 @@ class _PersonalScreenState extends State<PersonalScreen>
                 offset: Offset(50 * (1 - value), 0),
                 child: Opacity(
                   opacity: value,
-                  child: _buildEnhancedMenuItem(
+                  child: _buildGradientMenuItem(
                     context,
                     icon: menuItems[index]['icon'] as IconData,
                     title: menuItems[index]['title'] as String,
                     subtitle: menuItems[index]['subtitle'] as String,
-                    color: menuItems[index]['color'] as Color,
+                    gradientColors: menuItems[index]['gradient'] as List<Color>,
                     onTap: () {
                       Navigator.push(
                         context,
                         PageRouteBuilder(
-                          pageBuilder:
-                              (context, animation, secondaryAnimation) =>
-                                  menuItems[index]['screen'] as Widget,
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
+                          pageBuilder: (context, animation, secondaryAnimation) =>
+                              menuItems[index]['screen'] as Widget,
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
                             return SlideTransition(
                               position: animation.drive(
                                 Tween(
@@ -303,12 +292,12 @@ class _PersonalScreenState extends State<PersonalScreen>
     );
   }
 
-  Widget _buildEnhancedMenuItem(
+  Widget _buildGradientMenuItem(
     BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
-    required Color color,
+    required List<Color> gradientColors,
     required VoidCallback onTap,
   }) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -345,15 +334,12 @@ class _PersonalScreenState extends State<PersonalScreen>
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
-                      colors: [
-                        color.withOpacity(0.8),
-                        color,
-                      ],
+                      colors: gradientColors,
                     ),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: color.withOpacity(0.3),
+                        color: gradientColors.first.withOpacity(0.3),
                         blurRadius: 8,
                         offset: Offset(0, 4),
                       ),
@@ -393,12 +379,14 @@ class _PersonalScreenState extends State<PersonalScreen>
                 Container(
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    gradient: LinearGradient(
+                      colors: gradientColors,
+                    ),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     Icons.arrow_forward_ios,
-                    color: color,
+                    color: Colors.white,
                     size: 16,
                   ),
                 ),
@@ -417,17 +405,29 @@ class _PersonalScreenState extends State<PersonalScreen>
       padding: EdgeInsets.all(20),
       child: Column(
         children: [
-          Divider(
-            color: themeProvider.dividerColor,
+          Container(
+            height: 4,
+            margin: EdgeInsets.symmetric(horizontal: 40),
+            decoration: BoxDecoration(
+              gradient: themeProvider.primaryGradient,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
           SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.favorite,
-                color: Colors.red.shade400,
-                size: 16,
+              Container(
+                padding: EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  gradient: themeProvider.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.favorite,
+                  color: Colors.white,
+                  size: 16,
+                ),
               ),
               SizedBox(width: 8),
               Text(
@@ -442,7 +442,7 @@ class _PersonalScreenState extends State<PersonalScreen>
           ),
           SizedBox(height: 16),
           Text(
-            'Version 1.0.0',
+            'Version 1.0.0 • ${ThemeProvider.gradientThemes.length} Themes Available',
             style: TextStyle(
               fontSize: 10,
               color: themeProvider.subtitleColor.withOpacity(0.7),

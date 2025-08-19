@@ -1,7 +1,7 @@
-// lib/screens/statistics.dart - Updated with Advanced Sorting
+// lib/screens/statistics.dart - Final Version with Full Gradient Support
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart';
 import 'package:flowtrack/data/utlity.dart';
 import 'package:flowtrack/widgets/chart.dart';
 import 'package:flowtrack/data/models/transaction.dart';
@@ -22,8 +22,7 @@ class _StatisticsState extends State<Statistics> {
   List<Transaction> a = [];
   int index_color = 0;
   
-  // เพิ่มตัวแปรสำหรับการเรียงลำดับ
-  String sortType = 'amount_desc'; // ค่าเริ่มต้น: ใช้มากสุดไปน้อยสุด
+  String sortType = 'amount_desc';
   final List<Map<String, dynamic>> sortOptions = [
     {'value': 'amount_desc', 'label': 'Highest Amount', 'icon': Icons.arrow_downward},
     {'value': 'amount_asc', 'label': 'Lowest Amount', 'icon': Icons.arrow_upward},
@@ -42,8 +41,8 @@ class _StatisticsState extends State<Statistics> {
       setState(() {
         f = [today(), week(), month(), year()];
         if (f.isNotEmpty && index_color < f.length) {
-          a = List.from(f[index_color]); // สร้าง copy เพื่อไม่ให้กระทบข้อมูลต้นฉบับ
-          _sortTransactions(); // เรียงลำดับตาม sortType ปัจจุบัน
+          a = List.from(f[index_color]);
+          _sortTransactions();
         } else {
           a = [];
         }
@@ -97,7 +96,7 @@ class _StatisticsState extends State<Statistics> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: themeProvider.dividerColor,
+                  gradient: themeProvider.primaryGradient,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -112,20 +111,29 @@ class _StatisticsState extends State<Statistics> {
                   ),
                 ),
               ),
-              Divider(color: themeProvider.dividerColor),
+              Container(
+                height: 2,
+                margin: EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  gradient: themeProvider.primaryGradient,
+                ),
+              ),
               ...sortOptions.map((option) => ListTile(
                 leading: Container(
                   padding: EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: sortType == option['value'] 
-                        ? themeProvider.primaryColor.withOpacity(0.1)
+                    gradient: sortType == option['value'] 
+                        ? themeProvider.primaryGradient
+                        : null,
+                    color: sortType == option['value']
+                        ? null
                         : themeProvider.backgroundColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     option['icon'],
                     color: sortType == option['value'] 
-                        ? themeProvider.primaryColor 
+                        ? Colors.white
                         : themeProvider.subtitleColor,
                   ),
                 ),
@@ -141,7 +149,14 @@ class _StatisticsState extends State<Statistics> {
                   ),
                 ),
                 trailing: sortType == option['value']
-                    ? Icon(Icons.check_circle, color: themeProvider.primaryColor)
+                    ? Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          gradient: themeProvider.primaryGradient,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(Icons.check, color: Colors.white, size: 16),
+                      )
                     : null,
                 onTap: () {
                   setState(() {
@@ -217,24 +232,35 @@ class _StatisticsState extends State<Statistics> {
                             _loadData();
                           });
                         },
-                        child: Container(
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 300),
                           height: 40,
                           width: 80,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
+                            gradient: index_color == index
+                                ? themeProvider.primaryGradient
+                                : null,
                             color: index_color == index
-                                ? themeProvider.primaryColor
+                                ? null
                                 : themeProvider.cardColor,
+                            borderRadius: BorderRadius.circular(12),
                             boxShadow: index_color == index
                                 ? [
                                     BoxShadow(
-                                      color: themeProvider.primaryColor
-                                          .withOpacity(0.3),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 2),
+                                      color: themeProvider.primaryColor.withOpacity(0.4),
+                                      blurRadius: 10,
+                                      offset: Offset(0, 4),
                                     ),
                                   ]
-                                : null,
+                                : [
+                                    BoxShadow(
+                                      color: themeProvider.isDarkMode
+                                          ? Colors.black26
+                                          : Colors.grey.withOpacity(0.1),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
                           ),
                           alignment: Alignment.center,
                           child: Text(
@@ -244,7 +270,9 @@ class _StatisticsState extends State<Statistics> {
                                   ? Colors.white
                                   : themeProvider.textColor,
                               fontSize: 16,
-                              fontWeight: FontWeight.w500,
+                              fontWeight: index_color == index
+                                  ? FontWeight.w600
+                                  : FontWeight.w500,
                             ),
                           ),
                         ),
@@ -269,7 +297,6 @@ class _StatisticsState extends State<Statistics> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    // ปุ่มเรียงลำดับที่สวยขึ้น
                     Material(
                       color: Colors.transparent,
                       child: InkWell(
@@ -278,12 +305,15 @@ class _StatisticsState extends State<Statistics> {
                         child: Container(
                           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            border: Border.all(
-                              color: themeProvider.primaryColor.withOpacity(0.5),
-                              width: 1,
-                            ),
+                            gradient: themeProvider.primaryGradient,
                             borderRadius: BorderRadius.circular(20),
-                            color: themeProvider.primaryColor.withOpacity(0.1),
+                            boxShadow: [
+                              BoxShadow(
+                                color: themeProvider.primaryColor.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -293,7 +323,7 @@ class _StatisticsState extends State<Statistics> {
                                   (opt) => opt['value'] == sortType
                                 )['icon'],
                                 size: 16,
-                                color: themeProvider.primaryColor,
+                                color: Colors.white,
                               ),
                               SizedBox(width: 6),
                               Text(
@@ -302,7 +332,7 @@ class _StatisticsState extends State<Statistics> {
                                 )['label'],
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: themeProvider.primaryColor,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
@@ -310,7 +340,7 @@ class _StatisticsState extends State<Statistics> {
                               Icon(
                                 Icons.arrow_drop_down,
                                 size: 18,
-                                color: themeProvider.primaryColor,
+                                color: Colors.white,
                               ),
                             ],
                           ),
@@ -331,8 +361,14 @@ class _StatisticsState extends State<Statistics> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.bar_chart,
-                            size: 64, color: themeProvider.subtitleColor),
+                        Container(
+                          padding: EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: themeProvider.primaryGradient,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.bar_chart, size: 40, color: Colors.white),
+                        ),
                         SizedBox(height: 16),
                         Text(
                           'No transactions for this period',
@@ -370,13 +406,7 @@ class _StatisticsState extends State<Statistics> {
     final iconName = category?.iconName ?? 'Giftbox';
 
     final List<String> dayNames = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday',
     ];
 
     return Container(
@@ -409,9 +439,9 @@ class _StatisticsState extends State<Statistics> {
               padding: EdgeInsets.all(8),
               child: Image.asset(
                 'images/$iconName.png',
+                // ไม่เปลี่ยนสีไอคอน - ใช้สีเดิม
                 errorBuilder: (context, error, stackTrace) {
-                  return Icon(Icons.category,
-                      size: 25, color: themeProvider.primaryColor);
+                  return Icon(Icons.category, size: 25, color: themeProvider.primaryColor);
                 },
               ),
             ),
@@ -436,9 +466,9 @@ class _StatisticsState extends State<Statistics> {
         trailing: Container(
           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: transaction.isIncome
-                ? Colors.green.withOpacity(0.1)
-                : Colors.red.withOpacity(0.1),
+            gradient: transaction.isIncome
+                ? LinearGradient(colors: [Colors.green.shade400, Colors.green.shade600])
+                : LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text(
@@ -446,7 +476,7 @@ class _StatisticsState extends State<Statistics> {
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 16,
-              color: transaction.isIncome ? Colors.green : Colors.red,
+              color: Colors.white,
             ),
           ),
         ),

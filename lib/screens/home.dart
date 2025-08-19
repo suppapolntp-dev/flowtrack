@@ -1,14 +1,14 @@
-// lib/screens/home.dart - Updated with See All navigation
+// lib/screens/home.dart - Updated with Full Gradient Support
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 import 'package:flowtrack/data/models/transaction.dart';
 import 'package:flowtrack/data/utlity.dart';
 
 class Home extends StatefulWidget {
-  final Function(int)? onNavigateToWallet; // เพิ่ม callback
+  final Function(int)? onNavigateToWallet;
   const Home({super.key, this.onNavigateToWallet});
 
   @override
@@ -122,30 +122,28 @@ class _HomeState extends State<Home> {
                               fontWeight: FontWeight.w600,
                               fontSize: 16,
                               color: themeProvider.textColor)),
-                      // ปรับปุ่ม See All ให้สวยขึ้น
+                      // Enhanced See All Button with Gradient
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
                           borderRadius: BorderRadius.circular(20),
                           onTap: () {
-                            // เรียก callback เพื่อไปหน้า Wallet
                             if (widget.onNavigateToWallet != null) {
-                              widget
-                                  .onNavigateToWallet!(2); // index 2 คือ Wallet
+                              widget.onNavigateToWallet!(2);
                             }
                           },
                           child: Container(
-                            padding: EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              border: Border.all(
-                                color:
-                                    themeProvider.primaryColor.withOpacity(0.5),
-                                width: 1,
-                              ),
+                              gradient: themeProvider.primaryGradient,
                               borderRadius: BorderRadius.circular(20),
-                              color:
-                                  themeProvider.primaryColor.withOpacity(0.1),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: themeProvider.primaryColor.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
+                                ),
+                              ],
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -154,12 +152,12 @@ class _HomeState extends State<Home> {
                                     style: TextStyle(
                                         fontWeight: FontWeight.w600,
                                         fontSize: 14,
-                                        color: themeProvider.primaryColor)),
+                                        color: Colors.white)),
                                 SizedBox(width: 4),
                                 Icon(
                                   Icons.arrow_forward_ios,
                                   size: 12,
-                                  color: themeProvider.primaryColor,
+                                  color: Colors.white,
                                 ),
                               ],
                             ),
@@ -174,7 +172,7 @@ class _HomeState extends State<Home> {
               transactions.isEmpty
                   ? SliverToBoxAdapter(
                       child: Container(
-                        height: 20,
+                        height: 200,
                         child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -268,15 +266,22 @@ class _HomeState extends State<Home> {
 
     return Column(
       children: [
-        // Header Background
+        // Gradient Header Background
         Container(
           width: double.infinity,
           height: 200,
           decoration: BoxDecoration(
-            color: themeProvider.primaryColor,
+            gradient: themeProvider.primaryGradient,
             borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(20),
                 bottomRight: Radius.circular(20)),
+            boxShadow: [
+              BoxShadow(
+                color: themeProvider.primaryColor.withOpacity(0.3),
+                blurRadius: 15,
+                offset: Offset(0, 8),
+              ),
+            ],
           ),
           child: Padding(
             padding: const EdgeInsets.only(top: 30, left: 15, right: 15),
@@ -309,19 +314,25 @@ class _HomeState extends State<Home> {
                         ),
                       ],
                     ),
-                    IconButton(
-                      icon: Icon(Icons.refresh,
-                          color: Colors.white.withOpacity(0.8)),
-                      onPressed: () async {
-                        await _loadUserName();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Profile updated'),
-                            duration: Duration(seconds: 1),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      },
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: IconButton(
+                        icon: Icon(Icons.refresh,
+                            color: Colors.white.withOpacity(0.8)),
+                        onPressed: () async {
+                          await _loadUserName();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Profile updated'),
+                              duration: Duration(seconds: 1),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -338,29 +349,37 @@ class _HomeState extends State<Home> {
           ),
         ),
 
-        // Cards
+        // Cards with Enhanced Gradient
         Transform.translate(
           offset: Offset(0, -75),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
-                // Main Balance Card
+                // Main Balance Card with Full Gradient
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(20),
                   decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        themeProvider.primaryColor,
+                        themeProvider.primaryColor.withOpacity(0.8),
+                        if (themeProvider.currentTheme.colors.length > 1)
+                          themeProvider.currentTheme.colors[1].withOpacity(0.9),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(15),
                     boxShadow: [
                       BoxShadow(
-                          color: Color.lerp(themeProvider.primaryColor,
-                                  Colors.black, 0.25) ??
-                              themeProvider.primaryColor,
-                          offset: Offset(0, 4),
-                          blurRadius: 8,
-                          spreadRadius: 1)
+                        color: themeProvider.primaryColor.withOpacity(0.4),
+                        offset: Offset(0, 8),
+                        blurRadius: 20,
+                        spreadRadius: 2,
+                      )
                     ],
-                    color: themeProvider.primaryColor,
-                    borderRadius: BorderRadius.circular(15),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -386,12 +405,15 @@ class _HomeState extends State<Home> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    CircleAvatar(
-                                        radius: 12,
-                                        backgroundColor:
-                                            Colors.white.withOpacity(0.3),
-                                        child: Icon(Icons.arrow_downward,
-                                            color: Colors.white, size: 16)),
+                                    Container(
+                                      padding: EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(Icons.arrow_downward,
+                                          color: Colors.white, size: 16),
+                                    ),
                                     SizedBox(width: 8),
                                     Text('Income',
                                         style: TextStyle(
@@ -420,12 +442,15 @@ class _HomeState extends State<Home> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    CircleAvatar(
-                                        radius: 12,
-                                        backgroundColor:
-                                            Colors.white.withOpacity(0.3),
-                                        child: Icon(Icons.arrow_upward,
-                                            color: Colors.white, size: 16)),
+                                    Container(
+                                      padding: EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(Icons.arrow_upward,
+                                          color: Colors.white, size: 16),
+                                    ),
                                     SizedBox(width: 8),
                                     Text('Expenses',
                                         style: TextStyle(
@@ -458,15 +483,15 @@ class _HomeState extends State<Home> {
                     decoration: BoxDecoration(
                       color: themeProvider.cardColor,
                       borderRadius: BorderRadius.circular(12),
-                      border:
-                          Border.all(color: _getBudgetColor().withOpacity(0.3)),
+                      border: Border.all(color: _getBudgetColor().withOpacity(0.3)),
                       boxShadow: [
                         BoxShadow(
-                            color: themeProvider.isDarkMode
-                                ? Colors.black26
-                                : Colors.grey.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: Offset(0, 2))
+                          color: themeProvider.isDarkMode
+                              ? Colors.black26
+                              : Colors.grey.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: Offset(0, 2),
+                        )
                       ],
                     ),
                     child: Row(
@@ -474,11 +499,16 @@ class _HomeState extends State<Home> {
                         Container(
                           padding: EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: _getBudgetColor().withOpacity(0.1),
+                            gradient: LinearGradient(
+                              colors: [
+                                _getBudgetColor(),
+                                _getBudgetColor().withOpacity(0.7),
+                              ],
+                            ),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(Icons.account_balance_wallet,
-                              color: _getBudgetColor(), size: 20),
+                              color: Colors.white, size: 20),
                         ),
                         SizedBox(width: 12),
                         Expanded(
@@ -504,8 +534,7 @@ class _HomeState extends State<Home> {
                           child: LinearProgressIndicator(
                             value: _getBudgetPercentage() / 100,
                             backgroundColor: themeProvider.dividerColor,
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                _getBudgetColor()),
+                            valueColor: AlwaysStoppedAnimation<Color>(_getBudgetColor()),
                             minHeight: 6,
                           ),
                         ),

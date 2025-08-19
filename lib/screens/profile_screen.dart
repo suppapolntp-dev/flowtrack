@@ -1,7 +1,7 @@
 // lib/screens/profile_screen.dart - Updated with Theme Support (Complete)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -120,9 +120,10 @@ class _ProfileScreenState extends State<ProfileScreen>
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
         title: Text('Profile Settings'),
-        backgroundColor: themeProvider.primaryColor,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(gradient: themeProvider.primaryGradient),
+        ),
         elevation: 0,
-        
       ),
       body: isLoading
           ? Center(
@@ -203,7 +204,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ],
               ),
-            
             ),
           ),
         ],
@@ -220,7 +220,6 @@ class _ProfileScreenState extends State<ProfileScreen>
           icon: Icons.person,
         ),
         SizedBox(height: 16),
-        
         SizedBox(height: 16),
       ],
     );

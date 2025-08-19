@@ -1,7 +1,7 @@
 // lib/screens/export_screen.dart - Updated with Theme Support
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/providers/theme_provider.dart';
+import 'package:flowtrack/screens/theme_settings.dart';
 import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
@@ -19,17 +19,24 @@ class ExportScreen extends StatefulWidget {
 class _ExportScreenState extends State<ExportScreen> {
   bool isExporting = false;
   String selectedPeriod = 'All Time';
-  final List<String> periods = ['This Month', 'Last Month', 'This Year', 'All Time'];
+  final List<String> periods = [
+    'This Month',
+    'Last Month',
+    'This Year',
+    'All Time'
+  ];
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Scaffold(
       backgroundColor: themeProvider.backgroundColor,
       appBar: AppBar(
         title: Text('Export Data'),
-        backgroundColor: themeProvider.primaryColor,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(gradient: themeProvider.primaryGradient),
+        ),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -52,7 +59,7 @@ class _ExportScreenState extends State<ExportScreen> {
 
   Widget _buildHeaderSection() {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -60,8 +67,8 @@ class _ExportScreenState extends State<ExportScreen> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: themeProvider.isDarkMode 
-                ? Colors.black26 
+            color: themeProvider.isDarkMode
+                ? Colors.black26
                 : Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: Offset(0, 2),
@@ -79,9 +86,8 @@ class _ExportScreenState extends State<ExportScreen> {
                   color: themeProvider.primaryColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.file_download, 
-                    color: themeProvider.primaryColor, 
-                    size: 28),
+                child: Icon(Icons.file_download,
+                    color: themeProvider.primaryColor, size: 28),
               ),
               SizedBox(width: 12),
               Text(
@@ -109,7 +115,7 @@ class _ExportScreenState extends State<ExportScreen> {
 
   Widget _buildPeriodSelection() {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -117,8 +123,8 @@ class _ExportScreenState extends State<ExportScreen> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: themeProvider.isDarkMode 
-                ? Colors.black26 
+            color: themeProvider.isDarkMode
+                ? Colors.black26
                 : Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: Offset(0, 2),
@@ -137,19 +143,21 @@ class _ExportScreenState extends State<ExportScreen> {
             ),
           ),
           SizedBox(height: 15),
-          ...periods.map((period) => RadioListTile<String>(
-            title: Text(period, 
-                style: TextStyle(color: themeProvider.textColor)),
-            value: period,
-            groupValue: selectedPeriod,
-            activeColor: themeProvider.primaryColor,
-            onChanged: (value) {
-              setState(() {
-                selectedPeriod = value!;
-              });
-            },
-            contentPadding: EdgeInsets.zero,
-          )).toList(),
+          ...periods
+              .map((period) => RadioListTile<String>(
+                    title: Text(period,
+                        style: TextStyle(color: themeProvider.textColor)),
+                    value: period,
+                    groupValue: selectedPeriod,
+                    activeColor: themeProvider.primaryColor,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedPeriod = value!;
+                      });
+                    },
+                    contentPadding: EdgeInsets.zero,
+                  ))
+              .toList(),
         ],
       ),
     );
@@ -180,15 +188,15 @@ class _ExportScreenState extends State<ExportScreen> {
   }) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isEnabled = onTap != null;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: themeProvider.cardColor,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: themeProvider.isDarkMode 
-                ? Colors.black26 
+            color: themeProvider.isDarkMode
+                ? Colors.black26
                 : Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: Offset(0, 2),
@@ -226,7 +234,9 @@ class _ExportScreenState extends State<ExportScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: isEnabled ? themeProvider.textColor : themeProvider.subtitleColor,
+                          color: isEnabled
+                              ? themeProvider.textColor
+                              : themeProvider.subtitleColor,
                         ),
                       ),
                       SizedBox(height: 4),
@@ -245,8 +255,7 @@ class _ExportScreenState extends State<ExportScreen> {
                     width: 20,
                     height: 20,
                     child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: themeProvider.primaryColor),
+                        strokeWidth: 2, color: themeProvider.primaryColor),
                   )
                 else if (isEnabled)
                   Icon(
@@ -265,7 +274,7 @@ class _ExportScreenState extends State<ExportScreen> {
   Widget _buildDataPreview() {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final transactions = _getTransactionsForPeriod();
-    
+
     return Container(
       padding: EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -273,8 +282,8 @@ class _ExportScreenState extends State<ExportScreen> {
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
           BoxShadow(
-            color: themeProvider.isDarkMode 
-                ? Colors.black26 
+            color: themeProvider.isDarkMode
+                ? Colors.black26
                 : Colors.grey.withOpacity(0.1),
             blurRadius: 10,
             offset: Offset(0, 2),
@@ -296,9 +305,13 @@ class _ExportScreenState extends State<ExportScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildPreviewStat('Transactions', '${transactions.length}', Icons.receipt),
+              _buildPreviewStat(
+                  'Transactions', '${transactions.length}', Icons.receipt),
               _buildPreviewStat('Period', selectedPeriod, Icons.date_range),
-              _buildPreviewStat('Size', '~${(transactions.length * 0.1).toStringAsFixed(1)} KB', Icons.storage),
+              _buildPreviewStat(
+                  'Size',
+                  '~${(transactions.length * 0.1).toStringAsFixed(1)} KB',
+                  Icons.storage),
             ],
           ),
         ],
@@ -308,7 +321,7 @@ class _ExportScreenState extends State<ExportScreen> {
 
   Widget _buildPreviewStat(String label, String value, IconData icon) {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    
+
     return Column(
       children: [
         Icon(icon, color: themeProvider.primaryColor, size: 24),
@@ -368,46 +381,46 @@ class _ExportScreenState extends State<ExportScreen> {
 
     try {
       final transactions = _getTransactionsForPeriod();
-      
+
       // Create CSV headers
       List<List<dynamic>> csvData = [
         ['Date', 'Category', 'Description', 'Amount', 'Type']
       ];
-      
+
       // Add transaction data
       for (var transaction in transactions) {
-        final category = DatabaseService.getCategoryById(transaction.categoryId);
+        final category =
+            DatabaseService.getCategoryById(transaction.categoryId);
         csvData.add([
-          '${transaction.datetime.year}-${transaction.datetime.month.toString().padLeft(2,'0')}-${transaction.datetime.day.toString().padLeft(2,'0')}',
+          '${transaction.datetime.year}-${transaction.datetime.month.toString().padLeft(2, '0')}-${transaction.datetime.day.toString().padLeft(2, '0')}',
           category?.name ?? 'Unknown',
           transaction.description,
           transaction.amount.toStringAsFixed(2),
           transaction.type,
         ]);
       }
-      
+
       // Convert to CSV string
       String csvString = const ListToCsvConverter().convert(csvData);
-      
+
       // Create file
       final directory = await getApplicationDocumentsDirectory();
-      final fileName = 'FlowTrack_Export_${selectedPeriod.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.csv';
+      final fileName =
+          'FlowTrack_Export_${selectedPeriod.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.csv';
       final file = File('${directory.path}/$fileName');
       await file.writeAsString(csvString);
-      
+
       // Share file
-      await Share.shareXFiles(
-        [XFile(file.path)], 
-        text: 'FlowTrack Transaction Export - $selectedPeriod'
-      );
-      
+      await Share.shareXFiles([XFile(file.path)],
+          text: 'FlowTrack Transaction Export - $selectedPeriod');
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('CSV exported successfully! ${transactions.length} transactions'),
+          content: Text(
+              'CSV exported successfully! ${transactions.length} transactions'),
           backgroundColor: Colors.green,
         ),
       );
-      
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -429,7 +442,7 @@ class _ExportScreenState extends State<ExportScreen> {
 
     try {
       final transactions = _getTransactionsForPeriod();
-      
+
       // Create JSON data
       Map<String, dynamic> exportData = {
         'export_info': {
@@ -440,7 +453,8 @@ class _ExportScreenState extends State<ExportScreen> {
           'total_transactions': transactions.length,
         },
         'transactions': transactions.map((transaction) {
-          final category = DatabaseService.getCategoryById(transaction.categoryId);
+          final category =
+              DatabaseService.getCategoryById(transaction.categoryId);
           return {
             'id': transaction.id,
             'date': transaction.datetime.toIso8601String(),
@@ -452,29 +466,28 @@ class _ExportScreenState extends State<ExportScreen> {
           };
         }).toList(),
       };
-      
+
       // Convert to JSON string
       String jsonString = JsonEncoder.withIndent('  ').convert(exportData);
-      
+
       // Create file
       final directory = await getApplicationDocumentsDirectory();
-      final fileName = 'FlowTrack_Export_${selectedPeriod.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.json';
+      final fileName =
+          'FlowTrack_Export_${selectedPeriod.replaceAll(' ', '_')}_${DateTime.now().millisecondsSinceEpoch}.json';
       final file = File('${directory.path}/$fileName');
       await file.writeAsString(jsonString);
-      
+
       // Share file
-      await Share.shareXFiles(
-        [XFile(file.path)], 
-        text: 'FlowTrack JSON Export - $selectedPeriod'
-      );
-      
+      await Share.shareXFiles([XFile(file.path)],
+          text: 'FlowTrack JSON Export - $selectedPeriod');
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('JSON exported successfully! ${transactions.length} transactions'),
+          content: Text(
+              'JSON exported successfully! ${transactions.length} transactions'),
           backgroundColor: Colors.green,
         ),
       );
-      
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
