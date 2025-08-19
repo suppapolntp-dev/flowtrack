@@ -1,4 +1,4 @@
-// lib/screens/category_manager.dart - Updated with Improved UI
+// lib/screens/category_manager.dart - Complete File with Long Press Drag
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/providers/theme_provider.dart';
@@ -18,7 +18,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
   List<Category> expenseCategories = [];
   List<Category> incomeCategories = [];
   bool isLoading = false;
-  bool isReorderMode = false; // เพิ่มโหมดการจัดเรียง
+  bool isReorderMode = false;
 
   final List<Color> availableColors = [
     const Color(0xFFFF6B6B),
@@ -104,6 +104,43 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     });
   }
 
+  void _toggleReorderMode() {
+    setState(() {
+      isReorderMode = !isReorderMode;
+    });
+    
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    
+    if (isReorderMode) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.info_outline, color: Colors.white),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text('Long press and drag any card to reorder'),
+              ),
+            ],
+          ),
+          backgroundColor: themeProvider.primaryColor,
+          duration: Duration(seconds: 3),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+          action: SnackBarAction(
+            label: 'GOT IT',
+            textColor: Colors.white,
+            onPressed: () {},
+          ),
+        ),
+      );
+    } else {
+      _showSnackBar('Reorder mode disabled', Colors.blue);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -115,22 +152,26 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
         backgroundColor: themeProvider.primaryColor,
         elevation: 0,
         actions: [
-          // ปุ่มสลับโหมดจัดเรียง
-          IconButton(
-            icon: Icon(
-              isReorderMode ? Icons.done : Icons.reorder,
-              color: Colors.white,
+          Container(
+            margin: EdgeInsets.only(right: 8),
+            decoration: BoxDecoration(
+              color: isReorderMode 
+                  ? Colors.white.withOpacity(0.2)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(10),
             ),
-            onPressed: () {
-              setState(() {
-                isReorderMode = !isReorderMode;
-              });
-              if (!isReorderMode) {
-                _showSnackBar('Reorder mode disabled', Colors.blue);
-              } else {
-                _showSnackBar('Drag items to reorder', Colors.blue);
-              }
-            },
+            child: IconButton(
+              icon: AnimatedSwitcher(
+                duration: Duration(milliseconds: 300),
+                child: Icon(
+                  isReorderMode ? Icons.done_all : Icons.reorder,
+                  color: Colors.white,
+                  key: ValueKey(isReorderMode),
+                ),
+              ),
+              onPressed: _toggleReorderMode,
+              tooltip: isReorderMode ? 'Done Reordering' : 'Reorder Categories',
+            ),
           ),
         ],
         bottom: TabBar(
@@ -199,19 +240,22 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     }
 
     if (isReorderMode) {
-      // โหมดจัดเรียง
       return ReorderableListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: categories.length,
+        buildDefaultDragHandles: false,
         onReorder: (oldIndex, newIndex) =>
             _reorderCategories(categories, oldIndex, newIndex, type),
         itemBuilder: (context, index) {
           final category = categories[index];
-          return _buildReorderableCard(category, index);
+          return ReorderableDragStartListener(
+            key: ValueKey(category.id),
+            index: index,
+            child: _buildReorderableCard(category, index),
+          );
         },
       );
     } else {
-      // โหมดปกติ
       return ListView.builder(
         padding: const EdgeInsets.all(16),
         itemCount: categories.length,
@@ -228,29 +272,61 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     final color = Color(int.parse('0xFF${category.colorHex.substring(1)}'));
 
     return Card(
-      key: ValueKey(category.id),
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 3,
       color: themeProvider.cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: themeProvider.primaryColor.withOpacity(0.3),
+            width: 2,
+          ),
+        ),
         child: Row(
           children: [
-            // Drag Handle
-            Icon(
-              Icons.drag_indicator,
-              color: themeProvider.primaryColor,
-              size: 28,
+            Container(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.drag_handle_rounded,
+                    color: themeProvider.primaryColor,
+                    size: 24,
+                  ),
+                  Text(
+                    'HOLD',
+                    style: TextStyle(
+                      fontSize: 9,
+                      color: themeProvider.primaryColor,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
             ),
             SizedBox(width: 12),
-            // Icon
             Container(
               width: 50,
               height: 50,
               decoration: BoxDecoration(
-                color: color.withOpacity(0.2),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    color.withOpacity(0.3),
+                    color.withOpacity(0.1),
+                  ],
+                ),
                 borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: color.withOpacity(0.4),
+                  width: 2,
+                ),
               ),
               child: Center(
                 child: Image.asset('images/${category.iconName}.png',
@@ -261,7 +337,6 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
               ),
             ),
             SizedBox(width: 16),
-            // Name and Details
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,24 +347,52 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                           fontSize: 16,
                           color: themeProvider.textColor)),
                   SizedBox(height: 4),
-                  Text(category.type,
-                      style: TextStyle(color: themeProvider.subtitleColor)),
-                  if (category.budgetLimit != null) ...[
-                    SizedBox(height: 4),
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: themeProvider.primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          category.type,
+                          style: TextStyle(
+                            color: themeProvider.primaryColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ),
-                      child: Text(
-                        'Budget: \฿${category.budgetLimit!.toStringAsFixed(0)}',
-                        style:
-                            TextStyle(color: Colors.green[600], fontSize: 11),
-                      ),
-                    ),
-                  ],
+                      if (category.budgetLimit != null) ...[
+                        SizedBox(width: 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '\฿${category.budgetLimit!.toStringAsFixed(0)}',
+                            style: TextStyle(
+                              color: Colors.green[700],
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
                 ],
+              ),
+            ),
+            Container(
+              padding: EdgeInsets.all(8),
+              child: Icon(
+                Icons.reorder,
+                color: themeProvider.subtitleColor.withOpacity(0.5),
+                size: 20,
               ),
             ),
           ],
@@ -311,7 +414,6 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
         padding: EdgeInsets.all(12),
         child: Row(
           children: [
-            // Category Icon
             Container(
               width: 56,
               height: 56,
@@ -339,8 +441,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
               ),
             ),
             SizedBox(width: 12),
-
-            // Category Details
+            
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -354,8 +455,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                   Row(
                     children: [
                       Container(
-                        padding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: themeProvider.primaryColor.withOpacity(0.1),
                           borderRadius: BorderRadius.circular(10),
@@ -372,8 +472,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                       if (category.budgetLimit != null) ...[
                         SizedBox(width: 8),
                         Container(
-                          padding:
-                              EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: Colors.green.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(10),
@@ -393,13 +492,11 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                 ],
               ),
             ),
-
-            // Action Buttons with spacing
+            
             Container(
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Edit Button
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.blue.withOpacity(0.1),
@@ -414,8 +511,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                     ),
                   ),
                   SizedBox(width: 8),
-
-                  // Delete Button
+                  
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.red.withOpacity(0.1),
@@ -483,8 +579,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) => AlertDialog(
           backgroundColor: themeProvider.cardColor,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
               Container(
@@ -517,8 +612,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                     decoration: InputDecoration(
                       labelText: 'Category Name *',
                       labelStyle: TextStyle(color: themeProvider.subtitleColor),
-                      prefixIcon:
-                          Icon(Icons.label, color: themeProvider.primaryColor),
+                      prefixIcon: Icon(Icons.label, color: themeProvider.primaryColor),
                       border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12)),
                       enabledBorder: OutlineInputBorder(
@@ -544,7 +638,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                         labelText: 'Budget Limit (Optional)',
                         labelStyle:
                             TextStyle(color: themeProvider.subtitleColor),
-                        prefixIcon: Icon(Icons.account_balance_wallet,
+                        prefixIcon: Icon(Icons.account_balance_wallet, 
                             color: themeProvider.primaryColor),
                         border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12)),
@@ -566,8 +660,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                     ),
                     const SizedBox(height: 16),
                   ],
-
-                  // Color Selection
+                  
                   Container(
                     padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -580,7 +673,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.palette,
+                            Icon(Icons.palette, 
                                 color: themeProvider.primaryColor, size: 20),
                             SizedBox(width: 8),
                             Text('Select Color',
@@ -594,8 +687,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                           spacing: 10,
                           runSpacing: 10,
                           children: availableColors.map((color) {
-                            final isSelected =
-                                selectedColor.value == color.value;
+                            final isSelected = selectedColor.value == color.value;
                             return GestureDetector(
                               onTap: () =>
                                   setDialogState(() => selectedColor = color),
@@ -620,8 +712,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                                   ],
                                 ),
                                 child: isSelected
-                                    ? Icon(Icons.check,
-                                        color: Colors.white, size: 20)
+                                    ? Icon(Icons.check, color: Colors.white, size: 20)
                                     : null,
                               ),
                             );
@@ -631,8 +722,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                     ),
                   ),
                   const SizedBox(height: 16),
-
-                  // Icon Selection
+                  
                   Container(
                     padding: EdgeInsets.all(12),
                     decoration: BoxDecoration(
@@ -645,7 +735,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.category,
+                            Icon(Icons.category, 
                                 color: themeProvider.primaryColor, size: 20),
                             SizedBox(width: 8),
                             Text('Select Icon',
@@ -689,11 +779,9 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                                   child: Padding(
                                     padding: const EdgeInsets.all(4),
                                     child: Image.asset('images/$icon.png',
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                Icon(Icons.category,
-                                                    color: selectedColor,
-                                                    size: 20)),
+                                        errorBuilder: (context, error, stackTrace) =>
+                                            Icon(Icons.category,
+                                                color: selectedColor, size: 20)),
                                   ),
                                 ),
                               );
@@ -722,8 +810,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Text(isEditing ? 'Update' : 'Add',
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w600)),
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
               ),
             ),
           ],

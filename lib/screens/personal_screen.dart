@@ -22,7 +22,7 @@ class _PersonalScreenState extends State<PersonalScreen>
   late Animation<double> _fadeAnimation;
 
   String userName = 'User';
-  String userEmail = 'user@email.com';
+  // String userEmail = 'user@email.com';
   bool isLoading = true;
 
   @override
@@ -49,7 +49,7 @@ class _PersonalScreenState extends State<PersonalScreen>
       SharedPreferences prefs = await SharedPreferences.getInstance();
       setState(() {
         userName = prefs.getString('user_name') ?? 'Mr.Suppapol Tabudda';
-        userEmail = prefs.getString('user_email') ?? 'user@email.com';
+        // userEmail = prefs.getString('user_email') ?? 'user@email.com';
         isLoading = false;
       });
       _animationController.forward();
@@ -166,32 +166,6 @@ class _PersonalScreenState extends State<PersonalScreen>
                       ),
                     ),
                     SizedBox(height: 4),
-                    Text(
-                      userEmail,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    // Container(
-                    //   padding: EdgeInsets.symmetric(
-                    //     horizontal: 12,
-                    //     vertical: 4,
-                    //   ),
-                    //   decoration: BoxDecoration(
-                    //     color: Colors.white.withOpacity(0.2),
-                    //     borderRadius: BorderRadius.circular(20),
-                    //   ),
-                    //   child: Text(
-                    //     'Premium User',
-                    //     style: TextStyle(
-                    //       fontSize: 12,
-                    //       color: Colors.white,
-                    //       fontWeight: FontWeight.w500,
-                    //     ),
-                    //   ),
-                    // ),
                   ],
                 ),
               ),
@@ -199,29 +173,6 @@ class _PersonalScreenState extends State<PersonalScreen>
           ),
 
           SizedBox(height: 25),
-
-          // Quick Actions
-          // Container(
-          //   padding: EdgeInsets.all(20),
-          //   decoration: BoxDecoration(
-          //     color: Colors.white.withOpacity(0.15),
-          //     borderRadius: BorderRadius.circular(20),
-          //     border: Border.all(
-          //       color: Colors.white.withOpacity(0.2),
-          //       width: 1,
-          //     ),
-          //   ),
-          //   // child: Row(
-          //   //   mainAxisAlignment: MainAxisAlignment.spaceAround,
-          //   //   children: [
-          //   //     _buildQuickStat('Categories', '12', Icons.category),
-          //   //     _buildVerticalDivider(),
-          //   //     _buildQuickStat('This Month', '\$1,234', Icons.trending_up),
-          //   //     _buildVerticalDivider(),
-          //   //     _buildQuickStat('Transactions', '89', Icons.receipt_long),
-          //   //   ],
-          //   // ),
-          // ),
         ],
       ),
     );

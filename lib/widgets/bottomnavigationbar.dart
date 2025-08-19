@@ -23,8 +23,13 @@ class _BottomState extends State<Bottom> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
+    // บรรทัด 20-30 ใน bottomnavigationbar.dart
     List<Widget> screens = [
-      Home(),
+      Home(onNavigateToWallet: (index) {
+        setState(() {
+          index_color = index; // เปลี่ยนไป tab ที่ระบุ
+        });
+      }),
       Statistics(),
       WalletScreen(),
       PersonalScreen(),
@@ -73,7 +78,8 @@ class _BottomState extends State<Bottom> {
           },
           backgroundColor: themeProvider.primaryColor,
           elevation: 0,
-          child: Icon(Icons.add, color: Colors.white, size: 28), // เพิ่มขนาด icon
+          child:
+              Icon(Icons.add, color: Colors.white, size: 28), // เพิ่มขนาด icon
           // mini: false, // ใช้ FAB ขนาดปกติ (ใหญ่ขึ้น)
         ),
       ),
