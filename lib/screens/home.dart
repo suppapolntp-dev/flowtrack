@@ -1,4 +1,4 @@
-// lib/screens/home.dart - Updated with Full Gradient Support
+// lib/screens/home.dart - Updated with Colored Amount Boxes and Reduced Spacing
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/screens/theme_settings.dart';
@@ -110,7 +110,7 @@ class _HomeState extends State<Home> {
           child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(child: _head()),
-              SliverToBoxAdapter(child: SizedBox(height: 20)),
+              SliverToBoxAdapter(child: SizedBox(height: 12)), // ลดจาก 20 เป็น 12
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -253,11 +253,20 @@ class _HomeState extends State<Home> {
         style: TextStyle(
             fontWeight: FontWeight.w600, color: themeProvider.subtitleColor),
       ),
-      trailing: Text(transaction.formattedAmount,
-          style: TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 19,
-              color: transaction.isIncome ? Colors.green : Colors.red)),
+      trailing: Container(
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          gradient: transaction.isIncome 
+              ? LinearGradient(colors: [Colors.green.shade400, Colors.green.shade600])
+              : LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Text(transaction.formattedAmount,
+            style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: Colors.white)),
+      ),
     );
   }
 
@@ -390,11 +399,18 @@ class _HomeState extends State<Home> {
                               fontSize: 16,
                               color: Colors.white)),
                       SizedBox(height: 10),
-                      Text('\฿ ${total().toStringAsFixed(2)}',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 28,
-                              color: Colors.white)),
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text('\฿ ${total().toStringAsFixed(2)}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 28,
+                                color: Colors.white)),
+                      ),
                       SizedBox(height: 20),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -423,11 +439,20 @@ class _HomeState extends State<Home> {
                                   ],
                                 ),
                                 SizedBox(height: 5),
-                                Text('\฿ ${income().toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                        color: Colors.white)),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [Colors.green.shade400, Colors.green.shade600],
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text('\฿ ${income().toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                          color: Colors.white)),
+                                ),
                               ],
                             ),
                           ),
@@ -460,12 +485,21 @@ class _HomeState extends State<Home> {
                                   ],
                                 ),
                                 SizedBox(height: 5),
-                                Text(
-                                    '\฿ ${expenses().abs().toStringAsFixed(2)}',
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                        color: Colors.white)),
+                                Container(
+                                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [Colors.red.shade400, Colors.red.shade600],
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                      '\฿ ${expenses().abs().toStringAsFixed(2)}',
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
+                                          color: Colors.white)),
+                                ),
                               ],
                             ),
                           ),
@@ -476,7 +510,7 @@ class _HomeState extends State<Home> {
                 ),
 
                 if (monthlyBudget > 0) ...[
-                  SizedBox(height: 15),
+                  SizedBox(height: 12), // ลดจาก 15 เป็น 12
                   Container(
                     width: double.infinity,
                     padding: EdgeInsets.all(16),

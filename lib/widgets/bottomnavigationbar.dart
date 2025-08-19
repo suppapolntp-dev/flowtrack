@@ -99,7 +99,7 @@ class _BottomState extends State<Bottom> {
         shadowColor: themeProvider.isDarkMode
             ? Colors.black.withOpacity(0.3)
             : Colors.grey.withOpacity(0.2),
-        height: 100,
+        height: 105,
         child: Container(
           decoration: BoxDecoration(
             border: Border(
@@ -164,7 +164,7 @@ class _BottomState extends State<Bottom> {
                 color: isSelected
                     ? Colors.white
                     : themeProvider.subtitleColor,
-                size: isSelected ? 22 : 18,
+                size: isSelected ? 18 : 12,
               ),
             ),
             SizedBox(height: 6),

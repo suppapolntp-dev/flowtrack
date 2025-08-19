@@ -1,4 +1,4 @@
-// lib/screens/statistics.dart - Final Version with Full Gradient Support
+// lib/screens/statistics.dart - Updated with Summary Boxes
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/screens/theme_settings.dart';
@@ -174,6 +174,165 @@ class _StatisticsState extends State<Statistics> {
     );
   }
 
+  Widget _buildSummarySection() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
+    if (a.isEmpty) {
+      return Container(
+        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: themeProvider.cardColor,
+          borderRadius: BorderRadius.circular(15),
+          boxShadow: [
+            BoxShadow(
+                color: themeProvider.isDarkMode
+                    ? Colors.black26
+                    : Colors.grey.withOpacity(0.1),
+                blurRadius: 10,
+                offset: Offset(0, 2))
+          ],
+        ),
+        child: Center(
+          child: Text(
+            'No data for ${day[index_color].toLowerCase()}',
+            style: TextStyle(
+              color: themeProvider.subtitleColor,
+              fontSize: 16,
+            ),
+          ),
+        ),
+      );
+    }
+
+    double totalIncome = a.where((t) => t.isIncome).fold(0.0, (sum, t) => sum + t.amount);
+    double totalExpense = a.where((t) => t.isExpense).fold(0.0, (sum, t) => sum + t.amount);
+    double netAmount = totalIncome - totalExpense;
+    int totalTransactions = a.length;
+
+    return Container(
+      margin: EdgeInsets.all(16),
+      padding: EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: themeProvider.cardColor,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+              color: themeProvider.isDarkMode
+                  ? Colors.black26
+                  : Colors.grey.withOpacity(0.1),
+              blurRadius: 10,
+              offset: Offset(0, 2))
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Column(
+                children: [
+                  Text('Income',
+                      style: TextStyle(
+                          color: themeProvider.subtitleColor, fontSize: 14)),
+                  SizedBox(height: 4),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.green.shade400, Colors.green.shade600],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('\฿${totalIncome.toStringAsFixed(2)}',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white)),
+                  ),
+                ],
+              ),
+              Container(height: 40, width: 1, color: themeProvider.dividerColor),
+              Column(
+                children: [
+                  Text('Expense',
+                      style: TextStyle(
+                          color: themeProvider.subtitleColor, fontSize: 14)),
+                  SizedBox(height: 4),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.red.shade400, Colors.red.shade600],
+                      ),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('\฿${totalExpense.toStringAsFixed(2)}',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          SizedBox(height: 16),
+          Divider(color: themeProvider.dividerColor),
+          SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              Column(
+                children: [
+                  Text('Net Amount',
+                      style: TextStyle(
+                          color: themeProvider.subtitleColor, fontSize: 14)),
+                  SizedBox(height: 4),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: netAmount >= 0
+                          ? LinearGradient(colors: [Colors.green.shade400, Colors.green.shade600])
+                          : LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('${netAmount >= 0 ? '+' : ''}\฿${netAmount.toStringAsFixed(2)}',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white)),
+                  ),
+                ],
+              ),
+              Container(height: 40, width: 1, color: themeProvider.dividerColor),
+              Column(
+                children: [
+                  Text('Transactions',
+                      style: TextStyle(
+                          color: themeProvider.subtitleColor, fontSize: 14)),
+                  SizedBox(height: 4),
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      gradient: themeProvider.primaryGradient,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text('$totalTransactions',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
@@ -200,23 +359,51 @@ class _StatisticsState extends State<Statistics> {
     );
   }
 
+  Widget _buildHeader() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.symmetric(vertical: 20),
+      decoration: BoxDecoration(
+        gradient: themeProvider.primaryGradient,
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(20),
+          bottomRight: Radius.circular(20),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: themeProvider.primaryColor.withOpacity(0.3),
+            blurRadius: 15,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text('Statistics',
+              style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white)),
+          SizedBox(height: 8),
+          Text('Transaction Analytics & Insights',
+              style: TextStyle(
+                  fontSize: 14, color: Colors.white.withOpacity(0.9))),
+        ],
+      ),
+    );
+  }
+
   CustomScrollView custom() {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return CustomScrollView(
       slivers: [
+        SliverToBoxAdapter(child: _buildHeader()),
         SliverToBoxAdapter(
           child: Column(
             children: [
-              SizedBox(height: 20),
-              Text(
-                'Statistics',
-                style: TextStyle(
-                  color: themeProvider.textColor,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
               SizedBox(height: 20),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 15),
@@ -282,6 +469,8 @@ class _StatisticsState extends State<Statistics> {
                 ),
               ),
               SizedBox(height: 20),
+              _buildSummarySection(),
+              SizedBox(height: 10),
               Chart(indexx: index_color),
               SizedBox(height: 20),
               Padding(

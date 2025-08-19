@@ -1,4 +1,4 @@
-// lib/screens/profile_screen.dart - Updated with Theme Support (Complete)
+// lib/screens/profile_screen.dart - Updated with Gradient Save Button
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/screens/theme_settings.dart';
@@ -143,7 +143,6 @@ class _ProfileScreenState extends State<ProfileScreen>
                     SizedBox(height: 30),
                     _buildSaveButton(),
                     SizedBox(height: 20),
-                    // _buildAdditionalOptions(),
                   ],
                 ),
               ),
@@ -194,7 +193,7 @@ class _ProfileScreenState extends State<ProfileScreen>
             child: Container(
               padding: EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: themeProvider.primaryColor,
+                gradient: themeProvider.primaryGradient,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
@@ -204,6 +203,7 @@ class _ProfileScreenState extends State<ProfileScreen>
                   ),
                 ],
               ),
+              child: Icon(Icons.camera_alt, color: Colors.white, size: 16),
             ),
           ),
         ],
@@ -284,17 +284,29 @@ class _ProfileScreenState extends State<ProfileScreen>
   Widget _buildSaveButton() {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
-    return SizedBox(
+    return Container(
       width: double.infinity,
       height: 50,
+      decoration: BoxDecoration(
+        gradient: themeProvider.primaryGradient,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: themeProvider.primaryColor.withOpacity(0.3),
+            blurRadius: 12,
+            offset: Offset(0, 6),
+          ),
+        ],
+      ),
       child: ElevatedButton(
         onPressed: isSaving ? null : _saveUserData,
         style: ElevatedButton.styleFrom(
-          backgroundColor: themeProvider.primaryColor,
+          backgroundColor: Colors.transparent,
+          shadowColor: Colors.transparent,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
-          elevation: 2,
+          elevation: 0,
         ),
         child: isSaving
             ? SizedBox(

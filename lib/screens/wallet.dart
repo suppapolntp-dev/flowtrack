@@ -1,4 +1,4 @@
-// lib/screens/wallet.dart - Updated with Advanced Sorting
+// lib/screens/wallet.dart - Updated with Gradient Effects (Category Icons unchanged)
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/screens/theme_settings.dart';
@@ -170,7 +170,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: themeProvider.dividerColor,
+                  gradient: themeProvider.primaryGradient,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -185,7 +185,13 @@ class _WalletScreenState extends State<WalletScreen> {
                   ),
                 ),
               ),
-              Divider(color: themeProvider.dividerColor),
+              Container(
+                height: 2,
+                margin: EdgeInsets.symmetric(horizontal: 20),
+                decoration: BoxDecoration(
+                  gradient: themeProvider.primaryGradient,
+                ),
+              ),
               Container(
                 constraints: BoxConstraints(
                     maxHeight: MediaQuery.of(context).size.height * 0.5),
@@ -196,16 +202,18 @@ class _WalletScreenState extends State<WalletScreen> {
                               leading: Container(
                                 padding: EdgeInsets.all(8),
                                 decoration: BoxDecoration(
+                                  gradient: sortType == option['value']
+                                      ? themeProvider.primaryGradient
+                                      : null,
                                   color: sortType == option['value']
-                                      ? themeProvider.primaryColor
-                                          .withOpacity(0.1)
+                                      ? null
                                       : themeProvider.backgroundColor,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(
                                   option['icon'],
                                   color: sortType == option['value']
-                                      ? themeProvider.primaryColor
+                                      ? Colors.white
                                       : themeProvider.subtitleColor,
                                 ),
                               ),
@@ -221,8 +229,14 @@ class _WalletScreenState extends State<WalletScreen> {
                                 ),
                               ),
                               trailing: sortType == option['value']
-                                  ? Icon(Icons.check_circle,
-                                      color: themeProvider.primaryColor)
+                                  ? Container(
+                                      padding: EdgeInsets.all(4),
+                                      decoration: BoxDecoration(
+                                        gradient: themeProvider.primaryGradient,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(Icons.check, color: Colors.white, size: 16),
+                                    )
                                   : null,
                               onTap: () {
                                 setState(() {
@@ -236,7 +250,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   ),
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 40),
             ],
           ),
         );
@@ -279,6 +293,13 @@ class _WalletScreenState extends State<WalletScreen> {
           bottomLeft: Radius.circular(20),
           bottomRight: Radius.circular(20),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: themeProvider.primaryColor.withOpacity(0.3),
+            blurRadius: 15,
+            offset: Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -318,15 +339,18 @@ class _WalletScreenState extends State<WalletScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
+                  gradient: isSelected
+                      ? themeProvider.primaryGradient
+                      : null,
                   color: isSelected
-                      ? themeProvider.primaryColor
+                      ? null
                       : themeProvider.cardColor,
                   boxShadow: [
                     if (isSelected)
                       BoxShadow(
-                        color: themeProvider.primaryColor.withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: Offset(0, 2),
+                        color: themeProvider.primaryColor.withOpacity(0.4),
+                        blurRadius: 12,
+                        offset: Offset(0, 6),
                       )
                     else
                       BoxShadow(
@@ -337,11 +361,11 @@ class _WalletScreenState extends State<WalletScreen> {
                         offset: Offset(0, 2),
                       ),
                   ],
-                  border: Border.all(
-                    color: isSelected
-                        ? themeProvider.primaryColor
-                        : themeProvider.dividerColor,
-                  ),
+                  border: isSelected
+                      ? null
+                      : Border.all(
+                          color: themeProvider.dividerColor,
+                        ),
                 ),
                 child: Text(
                   periods[index],
@@ -383,12 +407,15 @@ class _WalletScreenState extends State<WalletScreen> {
               child: Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  border: Border.all(
-                    color: themeProvider.primaryColor.withOpacity(0.5),
-                    width: 1,
-                  ),
+                  gradient: themeProvider.primaryGradient,
                   borderRadius: BorderRadius.circular(20),
-                  color: themeProvider.primaryColor.withOpacity(0.1),
+                  boxShadow: [
+                    BoxShadow(
+                      color: themeProvider.primaryColor.withOpacity(0.3),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -397,7 +424,7 @@ class _WalletScreenState extends State<WalletScreen> {
                       sortOptions.firstWhere(
                           (opt) => opt['value'] == sortType)['icon'],
                       size: 16,
-                      color: themeProvider.primaryColor,
+                      color: Colors.white,
                     ),
                     SizedBox(width: 6),
                     Text(
@@ -405,7 +432,7 @@ class _WalletScreenState extends State<WalletScreen> {
                           (opt) => opt['value'] == sortType)['label'],
                       style: TextStyle(
                         fontSize: 12,
-                        color: themeProvider.primaryColor,
+                        color: Colors.white,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -413,7 +440,7 @@ class _WalletScreenState extends State<WalletScreen> {
                     Icon(
                       Icons.arrow_drop_down,
                       size: 18,
-                      color: themeProvider.primaryColor,
+                      color: Colors.white,
                     ),
                   ],
                 ),
@@ -468,11 +495,20 @@ class _WalletScreenState extends State<WalletScreen> {
                   style: TextStyle(
                       color: themeProvider.subtitleColor, fontSize: 14)),
               SizedBox(height: 4),
-              Text('\฿${totalSpending.toStringAsFixed(2)}',
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red.shade600)),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.red.shade400, Colors.red.shade600],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('\฿${totalSpending.toStringAsFixed(2)}',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+              ),
             ],
           ),
           Container(height: 40, width: 1, color: themeProvider.dividerColor),
@@ -482,11 +518,20 @@ class _WalletScreenState extends State<WalletScreen> {
                   style: TextStyle(
                       color: themeProvider.subtitleColor, fontSize: 14)),
               SizedBox(height: 4),
-              Text('$totalTransactions',
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade600)),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade400, Colors.blue.shade600],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('$totalTransactions',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+              ),
             ],
           ),
           Container(height: 40, width: 1, color: themeProvider.dividerColor),
@@ -496,11 +541,20 @@ class _WalletScreenState extends State<WalletScreen> {
                   style: TextStyle(
                       color: themeProvider.subtitleColor, fontSize: 14)),
               SizedBox(height: 4),
-              Text('${categorySpendingList.length}',
-                  style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green.shade600)),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade400, Colors.green.shade600],
+                  ),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('${categorySpendingList.length}',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+              ),
             ],
           ),
         ],
@@ -523,7 +577,14 @@ class _WalletScreenState extends State<WalletScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.wallet, size: 64, color: themeProvider.subtitleColor),
+            Container(
+              padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: themeProvider.primaryGradient,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.wallet, size: 40, color: Colors.white),
+            ),
             SizedBox(height: 16),
             Text('No spending data',
                 style: TextStyle(
@@ -602,14 +663,20 @@ class _WalletScreenState extends State<WalletScreen> {
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
                                   color: themeProvider.textColor)),
-                          Text(
-                              '\฿${categorySpending.totalAmount.toStringAsFixed(2)}',
-                              style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: category.type == 'Expense'
-                                      ? Colors.red.shade600
-                                      : Colors.green.shade600)),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                            decoration: BoxDecoration(
+                              gradient: category.type == 'Expense'
+                                  ? LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600])
+                                  : LinearGradient(colors: [Colors.green.shade400, Colors.green.shade600]),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text('\฿${categorySpending.totalAmount.toStringAsFixed(2)}',
+                                style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white)),
+                          ),
                         ],
                       ),
                       SizedBox(height: 4),
@@ -621,11 +688,18 @@ class _WalletScreenState extends State<WalletScreen> {
                               style: TextStyle(
                                   color: themeProvider.subtitleColor,
                                   fontSize: 12)),
-                          Text('${percentage.toStringAsFixed(1)}%',
-                              style: TextStyle(
-                                  color: themeProvider.subtitleColor,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500)),
+                          Container(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              gradient: themeProvider.primaryGradient,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text('${percentage.toStringAsFixed(1)}%',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600)),
+                          ),
                         ],
                       ),
                       SizedBox(height: 8),
@@ -639,7 +713,9 @@ class _WalletScreenState extends State<WalletScreen> {
                           widthFactor: percentage / 100,
                           child: Container(
                             decoration: BoxDecoration(
-                                color: color,
+                                gradient: LinearGradient(
+                                  colors: [color, color.withOpacity(0.7)],
+                                ),
                                 borderRadius: BorderRadius.circular(2)),
                           ),
                         ),
@@ -704,7 +780,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-                color: themeProvider.dividerColor,
+                gradient: themeProvider.primaryGradient,
                 borderRadius: BorderRadius.circular(2)),
           ),
           Container(
@@ -744,13 +820,21 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('\฿${categorySpending.totalAmount.toStringAsFixed(2)}',
-                        style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: category.type == 'Expense'
-                                ? Colors.red.shade600
-                                : Colors.green.shade600)),
+                    Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: category.type == 'Expense'
+                            ? LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600])
+                            : LinearGradient(colors: [Colors.green.shade400, Colors.green.shade600]),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text('\฿${categorySpending.totalAmount.toStringAsFixed(2)}',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                    ),
+                    SizedBox(height: 4),
                     Text('${categorySpending.transactionCount} transactions',
                         style: TextStyle(
                             color: themeProvider.subtitleColor, fontSize: 12)),
@@ -784,7 +868,8 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
       background: Container(
         margin: EdgeInsets.only(bottom: 8),
         decoration: BoxDecoration(
-            color: Colors.red, borderRadius: BorderRadius.circular(10)),
+            gradient: LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]), 
+            borderRadius: BorderRadius.circular(10)),
         alignment: Alignment.centerRight,
         padding: EdgeInsets.only(right: 20),
         child: Icon(Icons.delete, color: Colors.white),
@@ -804,10 +889,19 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
               TextButton(
                   onPressed: () => Navigator.pop(context, false),
                   child: Text('Cancel')),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-                child: Text('Delete', style: TextStyle(color: Colors.white)),
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                  ),
+                  child: Text('Delete', style: TextStyle(color: Colors.white)),
+                ),
               ),
             ],
           ),
@@ -858,12 +952,21 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(transaction.formattedAmount,
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                        color:
-                            transaction.isIncome ? Colors.green : Colors.red)),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    gradient: transaction.isIncome 
+                        ? LinearGradient(colors: [Colors.green.shade400, Colors.green.shade600])
+                        : LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(transaction.formattedAmount,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                          color: Colors.white)),
+                ),
+                SizedBox(height: 2),
                 Text('Swipe to delete',
                     style: TextStyle(
                         color: themeProvider.subtitleColor.withOpacity(0.7),
