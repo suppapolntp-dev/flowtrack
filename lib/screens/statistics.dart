@@ -1,4 +1,4 @@
-// lib/screens/statistics.dart - Updated with Summary Boxes
+// lib/screens/statistics.dart - Updated with Better Summary Layout and Floating Sort Dialog
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/screens/theme_settings.dart';
@@ -75,102 +75,180 @@ class _StatisticsState extends State<Statistics> {
 
   void _showSortOptions() {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
-    
-    showModalBottomSheet(
+    String tempSortType = sortType;
+
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: themeProvider.cardColor,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: themeProvider.cardColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
             children: [
               Container(
-                margin: EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
+                padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   gradient: themeProvider.primaryGradient,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(10),
                 ),
+                child: Icon(Icons.sort, color: Colors.white),
               ),
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  'Sort Transactions',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: themeProvider.textColor,
-                  ),
-                ),
+              SizedBox(width: 12),
+              Text(
+                'Sort Transactions',
+                style: TextStyle(color: themeProvider.textColor),
               ),
-              Container(
-                height: 2,
-                margin: EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  gradient: themeProvider.primaryGradient,
-                ),
-              ),
-              ...sortOptions.map((option) => ListTile(
-                leading: Container(
-                  padding: EdgeInsets.all(8),
+            ],
+          ),
+          content: Container(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    gradient: sortType == option['value'] 
-                        ? themeProvider.primaryGradient
-                        : null,
-                    color: sortType == option['value']
-                        ? null
-                        : themeProvider.backgroundColor,
-                    borderRadius: BorderRadius.circular(8),
+                    color: themeProvider.backgroundColor,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: themeProvider.dividerColor),
                   ),
-                  child: Icon(
-                    option['icon'],
-                    color: sortType == option['value'] 
-                        ? Colors.white
-                        : themeProvider.subtitleColor,
-                  ),
-                ),
-                title: Text(
-                  option['label'],
-                  style: TextStyle(
-                    color: sortType == option['value'] 
-                        ? themeProvider.primaryColor 
-                        : themeProvider.textColor,
-                    fontWeight: sortType == option['value'] 
-                        ? FontWeight.bold 
-                        : FontWeight.normal,
-                  ),
-                ),
-                trailing: sortType == option['value']
-                    ? Container(
-                        padding: EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          gradient: themeProvider.primaryGradient,
-                          shape: BoxShape.circle,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              gradient: themeProvider.primaryGradient,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(Icons.tune, color: Colors.white, size: 16),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Select Sort Method',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: themeProvider.textColor)),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Container(
+                        height: 200,
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: sortOptions.length,
+                          itemBuilder: (context, index) {
+                            final option = sortOptions[index];
+                            final isSelected = tempSortType == option['value'];
+
+                            return Container(
+                              margin: EdgeInsets.only(bottom: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: isSelected
+                                      ? themeProvider.primaryColor
+                                      : themeProvider.dividerColor,
+                                  width: isSelected ? 2 : 1,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                                color: isSelected
+                                    ? themeProvider.primaryColor.withOpacity(0.1)
+                                    : themeProvider.cardColor,
+                              ),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                leading: Container(
+                                  padding: EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    gradient: isSelected
+                                        ? themeProvider.primaryGradient
+                                        : null,
+                                    color: isSelected
+                                        ? null
+                                        : themeProvider.backgroundColor,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Icon(
+                                    option['icon'],
+                                    size: 18,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : themeProvider.subtitleColor,
+                                  ),
+                                ),
+                                title: Text(
+                                  option['label'],
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? themeProvider.primaryColor
+                                        : themeProvider.textColor,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                trailing: isSelected
+                                    ? Container(
+                                        padding: EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                          gradient: themeProvider.primaryGradient,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(Icons.check, color: Colors.white, size: 14),
+                                      )
+                                    : null,
+                                onTap: () {
+                                  setDialogState(() {
+                                    tempSortType = option['value'];
+                                  });
+                                },
+                              ),
+                            );
+                          },
                         ),
-                        child: Icon(Icons.check, color: Colors.white, size: 16),
-                      )
-                    : null,
-                onTap: () {
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel',
+                  style: TextStyle(color: themeProvider.subtitleColor)),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: themeProvider.primaryGradient,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: ElevatedButton(
+                onPressed: () {
                   setState(() {
-                    sortType = option['value'];
+                    sortType = tempSortType;
                     _sortTransactions();
                   });
                   Navigator.pop(context);
                 },
-              )).toList(),
-              SizedBox(height: 20),
-            ],
-          ),
-        );
-      },
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10))),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text('Apply',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -179,29 +257,12 @@ class _StatisticsState extends State<Statistics> {
     
     if (a.isEmpty) {
       return Container(
-        margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        padding: EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: themeProvider.cardColor,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-                color: themeProvider.isDarkMode
-                    ? Colors.black26
-                    : Colors.grey.withOpacity(0.1),
-                blurRadius: 10,
-                offset: Offset(0, 2))
-          ],
-        ),
+        margin: EdgeInsets.all(16),
+        height: 80,
         child: Center(
-          child: Text(
-            'No data for ${day[index_color].toLowerCase()}',
-            style: TextStyle(
-              color: themeProvider.subtitleColor,
-              fontSize: 16,
-            ),
-          ),
-        ),
+            child: CircularProgressIndicator(
+          color: themeProvider.primaryColor,
+        )),
       );
     }
 
@@ -225,106 +286,97 @@ class _StatisticsState extends State<Statistics> {
               offset: Offset(0, 2))
         ],
       ),
-      child: Column(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          Column(
             children: [
-              Column(
-                children: [
-                  Text('Income',
-                      style: TextStyle(
-                          color: themeProvider.subtitleColor, fontSize: 14)),
-                  SizedBox(height: 4),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.green.shade400, Colors.green.shade600],
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text('\฿${totalIncome.toStringAsFixed(2)}',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
+              Text('Income',
+                  style: TextStyle(
+                      color: themeProvider.subtitleColor, fontSize: 14)),
+              SizedBox(height: 4),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.green.shade400, Colors.green.shade600],
                   ),
-                ],
-              ),
-              Container(height: 40, width: 1, color: themeProvider.dividerColor),
-              Column(
-                children: [
-                  Text('Expense',
-                      style: TextStyle(
-                          color: themeProvider.subtitleColor, fontSize: 14)),
-                  SizedBox(height: 4),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.red.shade400, Colors.red.shade600],
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text('\฿${totalExpense.toStringAsFixed(2)}',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
-                  ),
-                ],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('\฿${totalIncome.toStringAsFixed(2)}',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
               ),
             ],
           ),
-          SizedBox(height: 16),
-          Divider(color: themeProvider.dividerColor),
-          SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+          Container(height: 40, width: 1, color: themeProvider.dividerColor),
+          Column(
             children: [
-              Column(
-                children: [
-                  Text('Net Amount',
-                      style: TextStyle(
-                          color: themeProvider.subtitleColor, fontSize: 14)),
-                  SizedBox(height: 4),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      gradient: netAmount >= 0
-                          ? LinearGradient(colors: [Colors.green.shade400, Colors.green.shade600])
-                          : LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text('${netAmount >= 0 ? '+' : ''}\฿${netAmount.toStringAsFixed(2)}',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
+              Text('Expense',
+                  style: TextStyle(
+                      color: themeProvider.subtitleColor, fontSize: 14)),
+              SizedBox(height: 4),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.red.shade400, Colors.red.shade600],
                   ),
-                ],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('\฿${totalExpense.toStringAsFixed(2)}',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
               ),
-              Container(height: 40, width: 1, color: themeProvider.dividerColor),
-              Column(
-                children: [
-                  Text('Transactions',
-                      style: TextStyle(
-                          color: themeProvider.subtitleColor, fontSize: 14)),
-                  SizedBox(height: 4),
-                  Container(
-                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                    decoration: BoxDecoration(
-                      gradient: themeProvider.primaryGradient,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text('$totalTransactions',
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white)),
+            ],
+          ),
+          Container(height: 40, width: 1, color: themeProvider.dividerColor),
+          Column(
+            children: [
+              Text('Net Amount',
+                  style: TextStyle(
+                      color: themeProvider.subtitleColor, fontSize: 14)),
+              SizedBox(height: 4),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: netAmount >= 0
+                      ? LinearGradient(colors: [Colors.green.shade400, Colors.green.shade600])
+                      : LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('${netAmount >= 0 ? '+' : ''}\฿${netAmount.toStringAsFixed(2)}',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
+              ),
+            ],
+          ),
+          Container(height: 40, width: 1, color: themeProvider.dividerColor),
+          Column(
+            children: [
+              Text('Transactions',
+                  style: TextStyle(
+                      color: themeProvider.subtitleColor, fontSize: 14)),
+              SizedBox(height: 4),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [Colors.blue.shade400, Colors.blue.shade600],
                   ),
-                ],
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text('$totalTransactions',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white)),
               ),
             ],
           ),
@@ -468,7 +520,7 @@ class _StatisticsState extends State<Statistics> {
                   ],
                 ),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               _buildSummarySection(),
               SizedBox(height: 10),
               Chart(indexx: index_color),
@@ -628,7 +680,6 @@ class _StatisticsState extends State<Statistics> {
               padding: EdgeInsets.all(8),
               child: Image.asset(
                 'images/$iconName.png',
-                // ไม่เปลี่ยนสีไอคอน - ใช้สีเดิม
                 errorBuilder: (context, error, stackTrace) {
                   return Icon(Icons.category, size: 25, color: themeProvider.primaryColor);
                 },
