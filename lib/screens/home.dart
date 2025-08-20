@@ -1349,7 +1349,7 @@ class _HomeState extends State<Home> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            if (dayData!['income']! > 0)
+                            if (dayData['income']! > 0)
                               Container(
                                 width: 2,
                                 height: 2,

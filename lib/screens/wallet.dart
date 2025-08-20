@@ -1,4 +1,4 @@
-// lib/screens/wallet.dart - Updated with Gradient Effects (Category Icons unchanged)
+// lib/screens/wallet.dart - Updated with Edit Transaction Feature and Fixed Sorting
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/screens/theme_settings.dart';
@@ -20,7 +20,7 @@ class _WalletScreenState extends State<WalletScreen> {
   List<CategorySpending> categorySpendingList = [];
   bool isLoading = false;
 
-  // เพิ่มตัวแปรสำหรับการเรียงลำดับ
+  // Variables for sorting
   String sortType = 'amount_desc';
   final List<Map<String, dynamic>> sortOptions = [
     {
@@ -106,11 +106,15 @@ class _WalletScreenState extends State<WalletScreen> {
         }
       }
 
-      categorySpendingList = categoryMap.values.toList();
-      _sortCategories(); // เรียงลำดับตาม sortType
+      setState(() {
+        categorySpendingList = categoryMap.values.toList();
+        _sortCategories(); // Sort after loading
+      });
     } catch (e) {
       print('Error loading category spending: $e');
-      categorySpendingList = [];
+      setState(() {
+        categorySpendingList = [];
+      });
     }
 
     setState(() {
@@ -149,112 +153,180 @@ class _WalletScreenState extends State<WalletScreen> {
 
   void _showSortOptions() {
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    String tempSortType = sortType;
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.transparent,
-      builder: (BuildContext context) {
-        return Container(
-          decoration: BoxDecoration(
-            color: themeProvider.cardColor,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(20),
-              topRight: Radius.circular(20),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          backgroundColor: themeProvider.cardColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
             children: [
               Container(
-                margin: EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
+                padding: EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   gradient: themeProvider.primaryGradient,
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(10),
                 ),
+                child: Icon(Icons.sort, color: Colors.white),
               ),
-              Padding(
-                padding: EdgeInsets.all(16),
-                child: Text(
-                  'Sort Categories',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: themeProvider.textColor,
-                  ),
-                ),
+              SizedBox(width: 12),
+              Text(
+                'Sort Categories',
+                style: TextStyle(color: themeProvider.textColor),
               ),
-              Container(
-                height: 2,
-                margin: EdgeInsets.symmetric(horizontal: 20),
-                decoration: BoxDecoration(
-                  gradient: themeProvider.primaryGradient,
-                ),
-              ),
-              Container(
-                constraints: BoxConstraints(
-                    maxHeight: MediaQuery.of(context).size.height * 0.5),
-                child: SingleChildScrollView(
-                  child: Column(
-                    children: sortOptions
-                        .map((option) => ListTile(
-                              leading: Container(
-                                padding: EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  gradient: sortType == option['value']
-                                      ? themeProvider.primaryGradient
-                                      : null,
-                                  color: sortType == option['value']
-                                      ? null
-                                      : themeProvider.backgroundColor,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: Icon(
-                                  option['icon'],
-                                  color: sortType == option['value']
-                                      ? Colors.white
-                                      : themeProvider.subtitleColor,
-                                ),
-                              ),
-                              title: Text(
-                                option['label'],
-                                style: TextStyle(
-                                  color: sortType == option['value']
-                                      ? themeProvider.primaryColor
-                                      : themeProvider.textColor,
-                                  fontWeight: sortType == option['value']
-                                      ? FontWeight.bold
-                                      : FontWeight.normal,
-                                ),
-                              ),
-                              trailing: sortType == option['value']
-                                  ? Container(
-                                      padding: EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        gradient: themeProvider.primaryGradient,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(Icons.check, color: Colors.white, size: 16),
-                                    )
-                                  : null,
-                              onTap: () {
-                                setState(() {
-                                  sortType = option['value'];
-                                  _sortCategories();
-                                });
-                                Navigator.pop(context);
-                              },
-                            ))
-                        .toList(),
-                  ),
-                ),
-              ),
-              SizedBox(height: 40),
             ],
           ),
-        );
-      },
+          content: Container(
+            width: double.maxFinite,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: themeProvider.backgroundColor,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: themeProvider.dividerColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              gradient: themeProvider.primaryGradient,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Icon(Icons.tune, color: Colors.white, size: 16),
+                          ),
+                          SizedBox(width: 8),
+                          Text('Select Sort Method',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: themeProvider.textColor)),
+                        ],
+                      ),
+                      SizedBox(height: 12),
+                      Container(
+                        height: 200,
+                        child: ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: sortOptions.length,
+                          itemBuilder: (context, index) {
+                            final option = sortOptions[index];
+                            final isSelected = tempSortType == option['value'];
+
+                            return Container(
+                              margin: EdgeInsets.only(bottom: 8),
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: isSelected
+                                      ? themeProvider.primaryColor
+                                      : themeProvider.dividerColor,
+                                  width: isSelected ? 2 : 1,
+                                ),
+                                borderRadius: BorderRadius.circular(8),
+                                color: isSelected
+                                    ? themeProvider.primaryColor.withOpacity(0.1)
+                                    : themeProvider.cardColor,
+                              ),
+                              child: ListTile(
+                                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                                leading: Container(
+                                  padding: EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    gradient: isSelected
+                                        ? themeProvider.primaryGradient
+                                        : null,
+                                    color: isSelected
+                                        ? null
+                                        : themeProvider.backgroundColor,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Icon(
+                                    option['icon'],
+                                    size: 18,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : themeProvider.subtitleColor,
+                                  ),
+                                ),
+                                title: Text(
+                                  option['label'],
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? themeProvider.primaryColor
+                                        : themeProvider.textColor,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                trailing: isSelected
+                                    ? Container(
+                                        padding: EdgeInsets.all(2),
+                                        decoration: BoxDecoration(
+                                          gradient: themeProvider.primaryGradient,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(Icons.check, color: Colors.white, size: 14),
+                                      )
+                                    : null,
+                                onTap: () {
+                                  setDialogState(() {
+                                    tempSortType = option['value'];
+                                  });
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel',
+                  style: TextStyle(color: themeProvider.subtitleColor)),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: themeProvider.primaryGradient,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    sortType = tempSortType;
+                    _sortCategories();
+                  });
+                  Navigator.pop(context);
+                },
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10))),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: Text('Apply',
+                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -739,7 +811,7 @@ class _WalletScreenState extends State<WalletScreen> {
       builder: (context) => CategoryDetailsBottomSheet(
         categorySpending: categorySpending,
         period: periods[selectedPeriodIndex],
-        onTransactionDeleted: () {
+        onTransactionUpdated: () {
           _loadCategorySpending();
         },
       ),
@@ -747,17 +819,17 @@ class _WalletScreenState extends State<WalletScreen> {
   }
 }
 
-// CategoryDetailsBottomSheet และ CategorySpending class คงเดิม
+// Updated CategoryDetailsBottomSheet with Edit Feature
 class CategoryDetailsBottomSheet extends StatelessWidget {
   final CategorySpending categorySpending;
   final String period;
-  final VoidCallback onTransactionDeleted;
+  final VoidCallback onTransactionUpdated;
 
   const CategoryDetailsBottomSheet({
     Key? key,
     required this.categorySpending,
     required this.period,
-    required this.onTransactionDeleted,
+    required this.onTransactionUpdated,
   }) : super(key: key);
 
   @override
@@ -863,76 +935,17 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-    return Dismissible(
-      key: Key(transaction.id),
-      background: Container(
-        margin: EdgeInsets.only(bottom: 8),
-        decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]), 
-            borderRadius: BorderRadius.circular(10)),
-        alignment: Alignment.centerRight,
-        padding: EdgeInsets.only(right: 20),
-        child: Icon(Icons.delete, color: Colors.white),
-      ),
-      direction: DismissDirection.endToStart,
-      confirmDismiss: (direction) async {
-        return await showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            backgroundColor: themeProvider.cardColor,
-            title: Text('Delete Transaction',
-                style: TextStyle(color: themeProvider.textColor)),
-            content: Text(
-                'Are you sure you want to delete this transaction?\n\n"${transaction.description}"',
-                style: TextStyle(color: themeProvider.textColor)),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: Text('Cancel')),
-              Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: ElevatedButton(
-                  onPressed: () => Navigator.pop(context, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                  ),
-                  child: Text('Delete', style: TextStyle(color: Colors.white)),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-      onDismissed: (direction) async {
-        try {
-          await DatabaseService.deleteTransaction(transaction.id);
-          onTransactionDeleted();
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Transaction deleted'),
-                backgroundColor: Colors.green),
-          );
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-                content: Text('Error deleting transaction'),
-                backgroundColor: Colors.red),
-          );
-        }
-      },
-      child: Container(
-        margin: EdgeInsets.only(bottom: 8),
-        padding: EdgeInsets.all(12),
-        decoration: BoxDecoration(
-            color: themeProvider.backgroundColor,
-            borderRadius: BorderRadius.circular(10)),
-        child: Row(
-          children: [
-            Expanded(
+    return Container(
+      margin: EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.all(12),
+      decoration: BoxDecoration(
+          color: themeProvider.backgroundColor,
+          borderRadius: BorderRadius.circular(10)),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _showEditTransactionDialog(context, transaction),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -949,32 +962,433 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                 ],
               ),
             ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    gradient: transaction.isIncome 
-                        ? LinearGradient(colors: [Colors.green.shade400, Colors.green.shade600])
-                        : LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(transaction.formattedAmount,
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                          color: Colors.white)),
+          ),
+          Row(
+            children: [
+              // Edit Button
+              Container(
+                margin: EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                SizedBox(height: 2),
-                Text('Swipe to delete',
+                child: IconButton(
+                  icon: Icon(Icons.edit, size: 18),
+                  color: Colors.blue,
+                  onPressed: () => _showEditTransactionDialog(context, transaction),
+                  constraints: BoxConstraints(minWidth: 32, minHeight: 32),
+                  padding: EdgeInsets.all(6),
+                ),
+              ),
+              // Amount Display
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  gradient: transaction.isIncome 
+                      ? LinearGradient(colors: [Colors.green.shade400, Colors.green.shade600])
+                      : LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(transaction.formattedAmount,
                     style: TextStyle(
-                        color: themeProvider.subtitleColor.withOpacity(0.7),
-                        fontSize: 10)),
-              ],
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                        color: Colors.white)),
+              ),
+              SizedBox(width: 8),
+              // Delete Button
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: IconButton(
+                  icon: Icon(Icons.delete, size: 18),
+                  color: Colors.red,
+                  onPressed: () => _showDeleteConfirmation(context, transaction),
+                  constraints: BoxConstraints(minWidth: 32, minHeight: 32),
+                  padding: EdgeInsets.all(6),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditTransactionDialog(BuildContext context, Transaction transaction) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    
+    final descriptionController = TextEditingController(text: transaction.description);
+    final amountController = TextEditingController(text: transaction.amount.toString());
+    
+    Category? selectedCategory = DatabaseService.getCategoryById(transaction.categoryId);
+    String selectedType = transaction.type;
+    DateTime selectedDate = transaction.datetime;
+    
+    List<Category> availableCategories = DatabaseService.getCategories(type: selectedType);
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          backgroundColor: themeProvider.cardColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  gradient: themeProvider.primaryGradient,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.edit, color: Colors.white),
+              ),
+              SizedBox(width: 12),
+              Text('Edit Transaction', style: TextStyle(color: themeProvider.textColor)),
+            ],
+          ),
+          content: Container(
+            width: double.maxFinite,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Type Selector
+                  Row(
+                    children: ['Income', 'Expense'].map((type) => Expanded(
+                      child: Padding(
+                        padding: EdgeInsets.only(right: type == 'Income' ? 5 : 0, left: type == 'Expense' ? 5 : 0),
+                        child: GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              selectedType = type;
+                              availableCategories = DatabaseService.getCategories(type: selectedType);
+                              if (availableCategories.isNotEmpty) {
+                                selectedCategory = availableCategories.first;
+                              }
+                            });
+                          },
+                          child: Container(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            decoration: BoxDecoration(
+                              gradient: selectedType == type ? themeProvider.primaryGradient : null,
+                              color: selectedType == type ? null : themeProvider.backgroundColor,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: selectedType == type 
+                                    ? Colors.transparent 
+                                    : themeProvider.dividerColor,
+                              ),
+                            ),
+                            child: Text(
+                              type,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: selectedType == type 
+                                    ? Colors.white 
+                                    : themeProvider.textColor,
+                                fontWeight: selectedType == type 
+                                    ? FontWeight.bold 
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    )).toList(),
+                  ),
+                  SizedBox(height: 16),
+                  
+                  // Category Selector
+                  DropdownButtonFormField<Category>(
+                    value: selectedCategory,
+                    decoration: InputDecoration(
+                      labelText: 'Category',
+                      labelStyle: TextStyle(color: themeProvider.subtitleColor),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: themeProvider.dividerColor),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: themeProvider.primaryColor, width: 2),
+                      ),
+                      filled: true,
+                      fillColor: themeProvider.backgroundColor,
+                    ),
+                    dropdownColor: themeProvider.cardColor,
+                    style: TextStyle(color: themeProvider.textColor),
+                    items: availableCategories.map((category) {
+                      return DropdownMenuItem<Category>(
+                        value: category,
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 30,
+                              child: Image.asset(
+                                'images/${category.iconName}.png',
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Icon(Icons.category, size: 20, color: themeProvider.subtitleColor),
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Text(category.name),
+                          ],
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (Category? newValue) {
+                      setState(() {
+                        selectedCategory = newValue;
+                      });
+                    },
+                  ),
+                  SizedBox(height: 16),
+                  
+                  // Description Field
+                  TextField(
+                    controller: descriptionController,
+                    style: TextStyle(color: themeProvider.textColor),
+                    decoration: InputDecoration(
+                      labelText: 'Description',
+                      labelStyle: TextStyle(color: themeProvider.subtitleColor),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: themeProvider.dividerColor),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: themeProvider.primaryColor, width: 2),
+                      ),
+                      filled: true,
+                      fillColor: themeProvider.backgroundColor,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  
+                  // Amount Field
+                  TextField(
+                    controller: amountController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(color: themeProvider.textColor),
+                    decoration: InputDecoration(
+                      labelText: 'Amount',
+                      labelStyle: TextStyle(color: themeProvider.subtitleColor),
+                      prefixText: '\฿ ',
+                      prefixStyle: TextStyle(color: themeProvider.textColor),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: themeProvider.dividerColor),
+                      ),
+                      focusedBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(10),
+                        borderSide: BorderSide(color: themeProvider.primaryColor, width: 2),
+                      ),
+                      filled: true,
+                      fillColor: themeProvider.backgroundColor,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  
+                  // Date Picker
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: themeProvider.dividerColor),
+                      borderRadius: BorderRadius.circular(10),
+                      color: themeProvider.backgroundColor,
+                    ),
+                    child: TextButton(
+                      onPressed: () async {
+                        DateTime? newDate = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2100),
+                          builder: (context, child) {
+                            return Theme(
+                              data: Theme.of(context).copyWith(
+                                colorScheme: ColorScheme.light(
+                                  primary: themeProvider.primaryColor,
+                                  onPrimary: Colors.white,
+                                  surface: themeProvider.cardColor,
+                                  onSurface: themeProvider.textColor,
+                                ),
+                              ),
+                              child: child!,
+                            );
+                          },
+                        );
+                        if (newDate != null) {
+                          setState(() {
+                            selectedDate = DateTime(
+                              newDate.year,
+                              newDate.month,
+                              newDate.day,
+                              selectedDate.hour,
+                              selectedDate.minute,
+                            );
+                          });
+                        }
+                      },
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Date: ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}',
+                          style: TextStyle(
+                            color: themeProvider.textColor,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel', style: TextStyle(color: themeProvider.subtitleColor)),
+            ),
+            Container(
+              decoration: BoxDecoration(
+                gradient: themeProvider.primaryGradient,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: ElevatedButton(
+                onPressed: () async {
+                  await _updateTransaction(
+                    context,
+                    transaction,
+                    selectedCategory!,
+                    descriptionController.text,
+                    double.parse(amountController.text),
+                    selectedType,
+                    selectedDate,
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                  shadowColor: Colors.transparent,
+                ),
+                child: Text('Update', style: TextStyle(color: Colors.white)),
+              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _updateTransaction(
+    BuildContext context,
+    Transaction transaction,
+    Category category,
+    String description,
+    double amount,
+    String type,
+    DateTime date,
+  ) async {
+    try {
+      transaction.categoryId = category.id;
+      transaction.description = description;
+      transaction.amount = amount;
+      transaction.type = type;
+      transaction.datetime = date;
+      
+      await DatabaseService.updateTransaction(transaction);
+      
+      Navigator.pop(context);
+      onTransactionUpdated();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Transaction updated successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error updating transaction: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _showDeleteConfirmation(BuildContext context, Transaction transaction) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: themeProvider.cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(Icons.delete, color: Colors.red),
+            ),
+            SizedBox(width: 12),
+            Text('Delete Transaction', style: TextStyle(color: themeProvider.textColor)),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to delete this transaction?\n\n"${transaction.description}"',
+          style: TextStyle(color: themeProvider.textColor),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel', style: TextStyle(color: themeProvider.subtitleColor)),
+          ),
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(colors: [Colors.red.shade400, Colors.red.shade600]),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: ElevatedButton(
+              onPressed: () async {
+                try {
+                  await DatabaseService.deleteTransaction(transaction.id);
+                  Navigator.pop(context);
+                  onTransactionUpdated();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Transaction deleted successfully'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error deleting transaction'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+              ),
+              child: Text('Delete', style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
       ),
     );
   }
