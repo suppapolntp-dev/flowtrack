@@ -117,15 +117,15 @@ class FlowTrackApp extends StatelessWidget {
       // Input Decoration
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: themeProvider.inputFillColor,
+        fillColor: themeProvider.cardColor,
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: themeProvider.inputBorderColor),
+          borderSide: BorderSide(color: themeProvider.dividerColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: themeProvider.inputBorderColor),
+          borderSide: BorderSide(color: themeProvider.dividerColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
