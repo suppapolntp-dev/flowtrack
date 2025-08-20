@@ -1,4 +1,4 @@
-// lib/widgets/chart.dart - Updated with Theme Support
+// lib/widgets/chart.dart - Fixed Time Parsing Issue
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/screens/theme_settings.dart';
@@ -209,36 +209,50 @@ class _ChartState extends State<Chart> {
 
     // เรียงลำดับตาม period
     if (widget.indexx == 0) {
-      // เรียงตามชั่วโมง
-      sortedEntries
-          .sort((a, b) => int.parse(a.key).compareTo(int.parse(b.key)));
+      // เรียงตามชั่วโมง - แยก hour จาก "8:00"
+      sortedEntries.sort((a, b) {
+        try {
+          int hourA = int.parse(a.key.split(':')[0]);
+          int hourB = int.parse(b.key.split(':')[0]);
+          return hourA.compareTo(hourB);
+        } catch (e) {
+          return a.key.compareTo(b.key);
+        }
+      });
     } else if (widget.indexx == 1) {
       // เรียงตามวันในสัปดาห์
       final dayOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-      sortedEntries.sort(
-          (a, b) => dayOrder.indexOf(a.key).compareTo(dayOrder.indexOf(b.key)));
+      sortedEntries.sort((a, b) {
+        int indexA = dayOrder.indexOf(a.key);
+        int indexB = dayOrder.indexOf(b.key);
+        if (indexA == -1) indexA = 999;
+        if (indexB == -1) indexB = 999;
+        return indexA.compareTo(indexB);
+      });
     } else if (widget.indexx == 2) {
       // เรียงตามวันในเดือน
-      sortedEntries
-          .sort((a, b) => int.parse(a.key).compareTo(int.parse(b.key)));
+      sortedEntries.sort((a, b) {
+        try {
+          int dayA = int.parse(a.key);
+          int dayB = int.parse(b.key);
+          return dayA.compareTo(dayB);
+        } catch (e) {
+          return a.key.compareTo(b.key);
+        }
+      });
     } else {
       // เรียงตามเดือนในปี
       final monthOrder = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec'
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
       ];
-      sortedEntries.sort((a, b) =>
-          monthOrder.indexOf(a.key).compareTo(monthOrder.indexOf(b.key)));
+      sortedEntries.sort((a, b) {
+        int indexA = monthOrder.indexOf(a.key);
+        int indexB = monthOrder.indexOf(b.key);
+        if (indexA == -1) indexA = 999;
+        if (indexB == -1) indexB = 999;
+        return indexA.compareTo(indexB);
+      });
     }
 
     // สร้าง cumulative data
@@ -254,30 +268,25 @@ class _ChartState extends State<Chart> {
   String _getPeriodLabel(Transaction transaction) {
     switch (widget.indexx) {
       case 0: // Day - show by hour
-        return '${transaction.datetime.hour}:00';
+        int hour = transaction.datetime.hour;
+        return '${hour.toString().padLeft(2, '0')}:00';
       case 1: // Week - show by day name
         const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        return dayNames[transaction.datetime.weekday - 1];
+        int weekday = transaction.datetime.weekday - 1;
+        if (weekday < 0 || weekday >= dayNames.length) return 'Unknown';
+        return dayNames[weekday];
       case 2: // Month - show by day
         return transaction.datetime.day.toString();
       case 3: // Year - show by month
         const monthNames = [
-          'Jan',
-          'Feb',
-          'Mar',
-          'Apr',
-          'May',
-          'Jun',
-          'Jul',
-          'Aug',
-          'Sep',
-          'Oct',
-          'Nov',
-          'Dec'
+          'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+          'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
         ];
-        return monthNames[transaction.datetime.month - 1];
+        int month = transaction.datetime.month - 1;
+        if (month < 0 || month >= monthNames.length) return 'Unknown';
+        return monthNames[month];
       default:
-        return '';
+        return 'Unknown';
     }
   }
 }
