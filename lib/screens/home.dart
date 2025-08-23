@@ -638,7 +638,7 @@ class _HomeState extends State<Home> {
                     ),
                     SizedBox(width: 16),
                     Text(
-                      'Period Summary',
+                      'Budget',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -677,7 +677,7 @@ class _HomeState extends State<Home> {
                               color: isSelected
                                   ? Colors.white
                                   : themeProvider.textColor,
-                              fontSize: 12,
+                              fontSize: 10,
                               fontWeight: isSelected
                                   ? FontWeight.w600
                                   : FontWeight.normal,
@@ -914,7 +914,7 @@ class _HomeState extends State<Home> {
                     ),
                     SizedBox(width: 8),
                     Text(
-                      'Recent Transactions (7 days)',
+                      'Recent',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -946,7 +946,7 @@ class _HomeState extends State<Home> {
                             'See All',
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
-                              fontSize: 12,
+                              fontSize: 10,
                               color: Colors.white,
                             ),
                           ),
@@ -1102,7 +1102,7 @@ class _HomeState extends State<Home> {
                                     Text(
                                       transaction.description,
                                       style: TextStyle(
-                                        fontSize: 14,
+                                        fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                         color: themeProvider.textColor,
                                       ),
@@ -1206,7 +1206,7 @@ class _HomeState extends State<Home> {
                       ),
                       SizedBox(width: 8),
                       Text(
-                        'Monthly Calendar',
+                        'Calendar',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

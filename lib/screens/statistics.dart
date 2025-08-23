@@ -1,4 +1,4 @@
-// lib/screens/statistics.dart - Updated with Better Summary Layout and Floating Sort Dialog
+// lib/screens/statistics.dart - Fixed empty data handling
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/screens/theme_settings.dart';
@@ -21,6 +21,7 @@ class _StatisticsState extends State<Statistics> {
   List<List<Transaction>> f = [];
   List<Transaction> a = [];
   int index_color = 0;
+  bool isLoading = true; // เพิ่ม loading state
   
   String sortType = 'amount_desc';
   final List<Map<String, dynamic>> sortOptions = [
@@ -36,8 +37,15 @@ class _StatisticsState extends State<Statistics> {
     _loadData();
   }
 
-  void _loadData() {
+  void _loadData() async {
+    setState(() {
+      isLoading = true;
+    });
+    
     try {
+      // จำลองการโหลดข้อมูล
+      await Future.delayed(Duration(milliseconds: 500));
+      
       setState(() {
         f = [today(), week(), month(), year()];
         if (f.isNotEmpty && index_color < f.length) {
@@ -46,12 +54,14 @@ class _StatisticsState extends State<Statistics> {
         } else {
           a = [];
         }
+        isLoading = false; // หยุด loading
       });
     } catch (e) {
       print('Error loading statistics data: $e');
       setState(() {
         f = [[], [], [], []];
         a = [];
+        isLoading = false; // หยุด loading แม้เกิดข้อผิดพลาด
       });
     }
   }
@@ -255,7 +265,8 @@ class _StatisticsState extends State<Statistics> {
   Widget _buildSummarySection() {
     final themeProvider = Provider.of<ThemeProvider>(context);
     
-    if (a.isEmpty) {
+    // แสดง loading เฉพาะตอนกำลังโหลดครั้งแรก
+    if (isLoading) {
       return Container(
         margin: EdgeInsets.all(16),
         height: 80,
@@ -266,6 +277,7 @@ class _StatisticsState extends State<Statistics> {
       );
     }
 
+    // คำนวณค่าสถิติ (แม้ a จะเป็น empty ก็ยังคำนวณได้)
     double totalIncome = a.where((t) => t.isIncome).fold(0.0, (sum, t) => sum + t.amount);
     double totalExpense = a.where((t) => t.isExpense).fold(0.0, (sum, t) => sum + t.amount);
     double netAmount = totalIncome - totalExpense;
@@ -293,7 +305,7 @@ class _StatisticsState extends State<Statistics> {
             children: [
               Text('Income',
                   style: TextStyle(
-                      color: themeProvider.subtitleColor, fontSize: 14)),
+                      color: themeProvider.subtitleColor, fontSize: 10)),
               SizedBox(height: 4),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -305,7 +317,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 child: Text('\฿${totalIncome.toStringAsFixed(2)}',
                     style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
               ),
@@ -316,7 +328,7 @@ class _StatisticsState extends State<Statistics> {
             children: [
               Text('Expense',
                   style: TextStyle(
-                      color: themeProvider.subtitleColor, fontSize: 14)),
+                      color: themeProvider.subtitleColor, fontSize: 10)),
               SizedBox(height: 4),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -328,7 +340,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 child: Text('\฿${totalExpense.toStringAsFixed(2)}',
                     style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
               ),
@@ -339,7 +351,7 @@ class _StatisticsState extends State<Statistics> {
             children: [
               Text('Net Amount',
                   style: TextStyle(
-                      color: themeProvider.subtitleColor, fontSize: 14)),
+                      color: themeProvider.subtitleColor, fontSize: 10)),
               SizedBox(height: 4),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -351,7 +363,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 child: Text('${netAmount >= 0 ? '+' : ''}\฿${netAmount.toStringAsFixed(2)}',
                     style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
               ),
@@ -362,7 +374,7 @@ class _StatisticsState extends State<Statistics> {
             children: [
               Text('Transactions',
                   style: TextStyle(
-                      color: themeProvider.subtitleColor, fontSize: 14)),
+                      color: themeProvider.subtitleColor, fontSize: 10)),
               SizedBox(height: 4),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -374,7 +386,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 child: Text('$totalTransactions',
                     style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
               ),
@@ -399,7 +411,7 @@ class _StatisticsState extends State<Statistics> {
           child: ValueListenableBuilder(
             valueListenable: kj,
             builder: (context, dynamic value, child) {
-              if (value < f.length) {
+              if (value < f.length && !isLoading) { // เช็ค isLoading ด้วย
                 a = List.from(f[value]);
                 _sortTransactions();
               }
@@ -468,7 +480,11 @@ class _StatisticsState extends State<Statistics> {
                           setState(() {
                             index_color = index;
                             kj.value = index;
-                            _loadData();
+                            // ไม่ต้อง _loadData() ใหม่ เพียงแค่เปลี่ยนข้อมูล
+                            if (f.isNotEmpty && index < f.length) {
+                              a = List.from(f[index]);
+                              _sortTransactions();
+                            }
                           });
                         },
                         child: AnimatedContainer(
@@ -482,7 +498,7 @@ class _StatisticsState extends State<Statistics> {
                             color: index_color == index
                                 ? null
                                 : themeProvider.cardColor,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(25),
                             boxShadow: index_color == index
                                 ? [
                                     BoxShadow(
@@ -508,7 +524,7 @@ class _StatisticsState extends State<Statistics> {
                               color: index_color == index
                                   ? Colors.white
                                   : themeProvider.textColor,
-                              fontSize: 16,
+                              fontSize: 14,
                               fontWeight: index_color == index
                                   ? FontWeight.w600
                                   : FontWeight.w500,
@@ -523,120 +539,135 @@ class _StatisticsState extends State<Statistics> {
               SizedBox(height: 10),
               _buildSummarySection(),
               SizedBox(height: 10),
-              Chart(indexx: index_color),
+              // แสดง Chart เฉพาะเมื่อไม่ loading
+              if (!isLoading) Chart(indexx: index_color),
               SizedBox(height: 20),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Top Spending',
-                      style: TextStyle(
-                        color: themeProvider.textColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+              // แสดง sort section เฉพาะเมื่อมีข้อมูลและไม่ loading
+              if (!isLoading && a.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 15),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Top Spending',
+                        style: TextStyle(
+                          color: themeProvider.textColor,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                    Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        borderRadius: BorderRadius.circular(20),
-                        onTap: _showSortOptions,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                          decoration: BoxDecoration(
-                            gradient: themeProvider.primaryGradient,
-                            borderRadius: BorderRadius.circular(20),
-                            boxShadow: [
-                              BoxShadow(
-                                color: themeProvider.primaryColor.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                sortOptions.firstWhere(
-                                  (opt) => opt['value'] == sortType
-                                )['icon'],
-                                size: 16,
-                                color: Colors.white,
-                              ),
-                              SizedBox(width: 6),
-                              Text(
-                                sortOptions.firstWhere(
-                                  (opt) => opt['value'] == sortType
-                                )['label'],
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(20),
+                          onTap: _showSortOptions,
+                          child: Container(
+                            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              gradient: themeProvider.primaryGradient,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: themeProvider.primaryColor.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: Offset(0, 2),
                                 ),
-                              ),
-                              SizedBox(width: 4),
-                              Icon(
-                                Icons.arrow_drop_down,
-                                size: 18,
-                                color: Colors.white,
-                              ),
-                            ],
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  sortOptions.firstWhere(
+                                    (opt) => opt['value'] == sortType
+                                  )['icon'],
+                                  size: 16,
+                                  color: Colors.white,
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  sortOptions.firstWhere(
+                                    (opt) => opt['value'] == sortType
+                                  )['label'],
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(width: 4),
+                                Icon(
+                                  Icons.arrow_drop_down,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         ),
-        a.isEmpty
+        // แสดง empty state หรือ transaction list
+        isLoading
             ? SliverToBoxAdapter(
                 child: Container(
                   height: 200,
                   child: Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Container(
-                          padding: EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            gradient: themeProvider.primaryGradient,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(Icons.bar_chart, size: 40, color: Colors.white),
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'No transactions for this period',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: themeProvider.subtitleColor,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Add some transactions to see statistics',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: themeProvider.subtitleColor,
-                          ),
-                        ),
-                      ],
+                    child: CircularProgressIndicator(
+                      color: themeProvider.primaryColor,
                     ),
                   ),
                 ),
               )
-            : SliverList(
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return buildTransactionTile(a[index]);
-                }, childCount: a.length),
-              ),
+            : a.isEmpty
+                ? SliverToBoxAdapter(
+                    child: Container(
+                      height: 200,
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(20),
+                              decoration: BoxDecoration(
+                                gradient: themeProvider.primaryGradient,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.bar_chart, size: 40, color: Colors.white),
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              'No transactions for this period',
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: themeProvider.subtitleColor,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            SizedBox(height: 8),
+                            Text(
+                              'Add some transactions to see statistics',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: themeProvider.subtitleColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                : SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      return buildTransactionTile(a[index]);
+                    }, childCount: a.length),
+                  ),
       ],
     );
   }
@@ -690,7 +721,7 @@ class _StatisticsState extends State<Statistics> {
         title: Text(
           transaction.description,
           style: TextStyle(
-            fontSize: 16,
+            fontSize: 13,
             fontWeight: FontWeight.w600,
             color: themeProvider.textColor,
           ),
@@ -715,7 +746,7 @@ class _StatisticsState extends State<Statistics> {
             transaction.formattedAmount,
             style: TextStyle(
               fontWeight: FontWeight.w600,
-              fontSize: 16,
+              fontSize: 12,
               color: Colors.white,
             ),
           ),

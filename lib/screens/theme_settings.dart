@@ -1,4 +1,4 @@
-// lib/screens/theme_settings.dart - Complete Beautiful Theme Gallery
+// lib/screens/theme_settings.dart - Complete Beautiful Theme Gallery with ListView and TitleView
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -578,6 +578,7 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen>
   final TextEditingController _searchController = TextEditingController();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
+  bool _isListView = false; // Toggle between Grid and List view
 
   @override
   void initState() {
@@ -629,7 +630,14 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen>
               SliverToBoxAdapter(child: SizedBox(height: 16)),
               SliverToBoxAdapter(child: _buildCategoryTabs()),
               SliverToBoxAdapter(child: SizedBox(height: 16)),
-              _buildThemeGridSliver(),
+              // Title View Section
+              SliverToBoxAdapter(child: _buildTitleView()),
+              SliverToBoxAdapter(child: SizedBox(height: 16)),
+              // Toggle View Mode Section
+              SliverToBoxAdapter(child: _buildViewToggle()),
+              SliverToBoxAdapter(child: SizedBox(height: 16)),
+              // Dynamic Content based on view mode
+              _isListView ? _buildThemeListSliver() : _buildThemeGridSliver(),
             ],
           ),
         ),
@@ -997,6 +1005,218 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen>
     );
   }
 
+  // NEW: Title View Section
+  Widget _buildTitleView() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final filteredThemes = getFilteredThemes();
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.info_outline, 
+                   color: themeProvider.primaryColor, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Theme Collection Summary',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: themeProvider.textColor,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: 12),
+          Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  themeProvider.primaryColor.withOpacity(0.05),
+                  themeProvider.primaryColor.withOpacity(0.02),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(
+                color: themeProvider.primaryColor.withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildTitleStat(
+                    '${filteredThemes.length}',
+                    'Themes Found',
+                    Icons.palette,
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 40,
+                  color: themeProvider.dividerColor,
+                ),
+                Expanded(
+                  child: _buildTitleStat(
+                    selectedCategory?.name ?? 'All',
+                    'Category',
+                    Icons.category,
+                  ),
+                ),
+                Container(
+                  width: 1,
+                  height: 40,
+                  color: themeProvider.dividerColor,
+                ),
+                Expanded(
+                  child: _buildTitleStat(
+                    _isListView ? 'List' : 'Grid',
+                    'View Mode',
+                    _isListView ? Icons.list : Icons.grid_view,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTitleStat(String value, String label, IconData icon) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    return Column(
+      children: [
+        Icon(icon, color: themeProvider.primaryColor, size: 20),
+        SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
+            color: themeProvider.textColor,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: themeProvider.subtitleColor,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  // NEW: View Toggle Section
+  Widget _buildViewToggle() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: [
+          Text(
+            'Display Options',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: themeProvider.textColor,
+            ),
+          ),
+          Spacer(),
+          Container(
+            decoration: BoxDecoration(
+              color: themeProvider.cardColor,
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: themeProvider.isDarkMode
+                      ? Colors.black26
+                      : Colors.grey.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildViewButton(
+                  icon: Icons.grid_view,
+                  label: 'Grid',
+                  isSelected: !_isListView,
+                  onTap: () {
+                    setState(() => _isListView = false);
+                    HapticFeedback.lightImpact();
+                  },
+                ),
+                _buildViewButton(
+                  icon: Icons.list,
+                  label: 'List',
+                  isSelected: _isListView,
+                  onTap: () {
+                    setState(() => _isListView = true);
+                    HapticFeedback.lightImpact();
+                  },
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildViewButton({
+    required IconData icon,
+    required String label,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 300),
+        padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          gradient: isSelected ? themeProvider.primaryGradient : null,
+          color: isSelected ? null : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? Colors.white : themeProvider.subtitleColor,
+              size: 18,
+            ),
+            SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.white : themeProvider.subtitleColor,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildCategoryChip(String name, int count, IconData icon, Color color,
       bool isSelected, VoidCallback onTap) {
     return GestureDetector(
@@ -1039,40 +1259,208 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen>
     );
   }
 
+  // NEW: Theme List View
+  Widget _buildThemeListSliver() {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final filteredThemes = getFilteredThemes();
+
+    if (filteredThemes.isEmpty) {
+      return _buildEmptyState();
+    }
+
+    return SliverPadding(
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      sliver: SliverList(
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
+            final theme = filteredThemes[index];
+            final globalIndex = ThemeProvider.gradientThemes.indexOf(theme);
+            final isSelected = themeProvider.selectedThemeIndex == globalIndex;
+
+            return TweenAnimationBuilder<double>(
+              duration: Duration(milliseconds: 400 + (index * 50)),
+              tween: Tween(begin: 0.0, end: 1.0),
+              builder: (context, value, child) {
+                return Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: Opacity(
+                    opacity: value,
+                    child: Container(
+                      margin: EdgeInsets.only(bottom: 12),
+                      child: _buildThemeListItem(theme, globalIndex, isSelected),
+                    ),
+                  ),
+                );
+              },
+            );
+          },
+          childCount: filteredThemes.length,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildThemeListItem(
+      GradientTheme theme, int globalIndex, bool isSelected) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        themeProvider.changeTheme(globalIndex);
+      },
+      child: Container(
+        padding: EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: themeProvider.cardColor,
+          borderRadius: BorderRadius.circular(16),
+          border: isSelected 
+              ? Border.all(color: themeProvider.primaryColor, width: 2)
+              : null,
+          boxShadow: [
+            BoxShadow(
+              color: themeProvider.isDarkMode
+                  ? Colors.black26
+                  : Colors.grey.withOpacity(0.1),
+              blurRadius: isSelected ? 12 : 6,
+              offset: Offset(0, isSelected ? 4 : 2),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            // Theme Preview
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(colors: theme.colors),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.primaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Icon(theme.icon, color: Colors.white, size: 24),
+            ),
+            SizedBox(width: 16),
+            // Theme Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        theme.name,
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: themeProvider.textColor,
+                        ),
+                      ),
+                      if (isSelected) ...[
+                        SizedBox(width: 8),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            gradient: themeProvider.primaryGradient,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            'ACTIVE',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: theme.category.color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              theme.category.icon,
+                              size: 12,
+                              color: theme.category.color,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              theme.category.name,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: theme.category.color,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Spacer(),
+                      // Color Dots
+                      Row(
+                        children: theme.colors.take(3).map((color) {
+                          return Container(
+                            width: 12,
+                            height: 12,
+                            margin: EdgeInsets.only(left: 2),
+                            decoration: BoxDecoration(
+                              color: color,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 1),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            // Action Icon
+            Container(
+              padding: EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: isSelected 
+                    ? themeProvider.primaryColor.withOpacity(0.1)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                isSelected ? Icons.check_circle : Icons.arrow_forward_ios,
+                color: isSelected 
+                    ? themeProvider.primaryColor
+                    : themeProvider.subtitleColor,
+                size: 16,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildThemeGridSliver() {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final filteredThemes = getFilteredThemes();
 
     if (filteredThemes.isEmpty) {
-      return SliverToBoxAdapter(
-        child: Container(
-          height: 300,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    gradient: themeProvider.primaryGradient,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(Icons.search_off, size: 40, color: Colors.white),
-                ),
-                SizedBox(height: 16),
-                Text('No themes found',
-                    style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w500,
-                        color: themeProvider.subtitleColor)),
-                Text('Try adjusting your search or category filter',
-                    style: TextStyle(
-                        fontSize: 14, color: themeProvider.subtitleColor)),
-              ],
-            ),
-          ),
-        ),
-      );
+      return _buildEmptyState();
     }
 
     return SliverPadding(
@@ -1205,28 +1593,37 @@ class _ThemeSettingsScreenState extends State<ThemeSettingsScreen>
     );
   }
 
-  Widget _buildStat(String value, String label) {
+  Widget _buildEmptyState() {
     final themeProvider = Provider.of<ThemeProvider>(context);
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: themeProvider.primaryColor,
+    
+    return SliverToBoxAdapter(
+      child: Container(
+        height: 300,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: themeProvider.primaryGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.search_off, size: 40, color: Colors.white),
+              ),
+              SizedBox(height: 16),
+              Text('No themes found',
+                  style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w500,
+                      color: themeProvider.subtitleColor)),
+              Text('Try adjusting your search or category filter',
+                  style: TextStyle(
+                      fontSize: 14, color: themeProvider.subtitleColor)),
+            ],
           ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: themeProvider.subtitleColor,
-          ),
-        ),
-      ],
+      ),
     );
   }
 

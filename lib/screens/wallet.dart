@@ -408,7 +408,7 @@ class _WalletScreenState extends State<WalletScreen> {
               },
               child: Container(
                 margin: EdgeInsets.only(right: 12),
-                padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(25),
                   gradient: isSelected
