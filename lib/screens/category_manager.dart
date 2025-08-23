@@ -1,4 +1,4 @@
-// lib/screens/category_manager.dart - Updated with Gradient Support
+// lib/screens/category_manager.dart - Updated with List/Grid Toggle
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:flowtrack/screens/theme_settings.dart';
@@ -19,6 +19,9 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
   List<Category> incomeCategories = [];
   bool isLoading = false;
   bool isReorderMode = false;
+  
+  // New: View mode toggle
+  bool isGridView = false;
 
   final List<Color> availableColors = [
     const Color(0xFFFF6B6B),
@@ -80,6 +83,8 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
   void _toggleReorderMode() {
     setState(() {
       isReorderMode = !isReorderMode;
+      // กลับไป List View เมื่อเข้า reorder mode
+      if (isReorderMode) isGridView = false;
     });
     
     final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
@@ -129,6 +134,33 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
           ),
         ),
         actions: [
+          // New: View Mode Toggle
+          if (!isReorderMode)
+            Container(
+              margin: EdgeInsets.only(right: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: IconButton(
+                icon: AnimatedSwitcher(
+                  duration: Duration(milliseconds: 300),
+                  child: Icon(
+                    isGridView ? Icons.view_list : Icons.grid_view,
+                    color: Colors.white,
+                    key: ValueKey(isGridView),
+                  ),
+                ),
+                onPressed: () {
+                  setState(() {
+                    isGridView = !isGridView;
+                  });
+                },
+                tooltip: isGridView ? 'Switch to List View' : 'Switch to Grid View',
+              ),
+            ),
+          
+          // Reorder Toggle
           Container(
             margin: EdgeInsets.only(right: 8),
             decoration: BoxDecoration(
@@ -206,63 +238,298 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     if (categories.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: themeProvider.primaryGradient,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                  type == 'Expense'
-                      ? Icons.remove_circle_outline
-                      : Icons.add_circle_outline,
-                  size: 40,
-                  color: Colors.white),
-            ),
-            SizedBox(height: 16),
-            Text('No ${type.toLowerCase()} categories',
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: themeProvider.subtitleColor)),
-            SizedBox(height: 8),
-            Text('Tap + to add your first category',
-                style: TextStyle(color: themeProvider.subtitleColor)),
-          ],
-        ),
-      );
+      return _buildEmptyState(type);
     }
 
     if (isReorderMode) {
-      return ReorderableListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: categories.length,
-        buildDefaultDragHandles: false,
-        onReorder: (oldIndex, newIndex) =>
-            _reorderCategories(categories, oldIndex, newIndex, type),
-        itemBuilder: (context, index) {
-          final category = categories[index];
-          return ReorderableDragStartListener(
-            key: ValueKey(category.id),
-            index: index,
-            child: _buildReorderableCard(category, index),
-          );
-        },
-      );
+      return _buildReorderableList(categories, type);
+    } else if (isGridView) {
+      return _buildGridView(categories);
     } else {
-      return ListView.builder(
-        padding: const EdgeInsets.all(16),
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          final category = categories[index];
-          return _buildCategoryCard(category, index);
-        },
-      );
+      return _buildListView(categories);
     }
+  }
+
+  Widget _buildEmptyState(String type) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: themeProvider.primaryGradient,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+                type == 'Expense'
+                    ? Icons.remove_circle_outline
+                    : Icons.add_circle_outline,
+                size: 40,
+                color: Colors.white),
+          ),
+          SizedBox(height: 16),
+          Text('No ${type.toLowerCase()} categories',
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w500,
+                  color: themeProvider.subtitleColor)),
+          SizedBox(height: 8),
+          Text('Tap + to add your first category',
+              style: TextStyle(color: themeProvider.subtitleColor)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReorderableList(List<Category> categories, String type) {
+    return ReorderableListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: categories.length,
+      buildDefaultDragHandles: false,
+      onReorder: (oldIndex, newIndex) =>
+          _reorderCategories(categories, oldIndex, newIndex, type),
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        return ReorderableDragStartListener(
+          key: ValueKey(category.id),
+          index: index,
+          child: _buildReorderableCard(category, index),
+        );
+      },
+    );
+  }
+
+  Widget _buildListView(List<Category> categories) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        return _buildCategoryCard(category, index);
+      },
+    );
+  }
+
+  // New: Grid View
+  Widget _buildGridView(List<Category> categories) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(16),
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.75,
+      ),
+      itemCount: categories.length,
+      itemBuilder: (context, index) {
+        final category = categories[index];
+        return _buildGridCard(category);
+      },
+    );
+  }
+
+  // New: Grid Card Widget
+  Widget _buildGridCard(Category category) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final color = Color(int.parse('0xFF${category.colorHex.substring(1)}'));
+
+    return Card(
+      elevation: 2,
+      color: themeProvider.cardColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => _showEditCategoryDialog(category),
+        onLongPress: () => _showCategoryOptionsDialog(category),
+        child: Container(
+          padding: EdgeInsets.all(12),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Icon Container
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      color.withOpacity(0.2),
+                      color.withOpacity(0.1),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: color.withOpacity(0.3),
+                    width: 1,
+                  ),
+                ),
+                child: Center(
+                  child: Image.asset('images/${category.iconName}.png',
+                      width: 28,
+                      height: 28,
+                      errorBuilder: (context, error, stackTrace) =>
+                          Icon(Icons.category, color: color, size: 24)),
+                ),
+              ),
+              SizedBox(height: 8),
+              
+              // Category Name
+              Text(category.name,
+                  style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      color: themeProvider.textColor),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
+              SizedBox(height: 4),
+              
+              // Type Badge
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  gradient: themeProvider.primaryGradient,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  category.type,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              
+              // Budget Limit (if exists)
+              if (category.budgetLimit != null) ...[
+                SizedBox(height: 4),
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '฿${category.budgetLimit!.toStringAsFixed(0)}',
+                    style: TextStyle(
+                      color: Colors.green[700],
+                      fontSize: 8,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // New: Options Dialog for Grid Cards
+  void _showCategoryOptionsDialog(Category category) {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: themeProvider.cardColor,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                gradient: themeProvider.primaryGradient,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            SizedBox(height: 16),
+            
+            Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Color(int.parse('0xFF${category.colorHex.substring(1)}')).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Image.asset('images/${category.iconName}.png',
+                      width: 24,
+                      errorBuilder: (context, error, stackTrace) =>
+                          Icon(Icons.category, size: 20)),
+                ),
+                SizedBox(width: 12),
+                Text(
+                  category.name,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: themeProvider.textColor,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: ListTile(
+                      leading: Icon(Icons.edit, color: Colors.blue),
+                      title: Text('Edit', style: TextStyle(color: Colors.blue, fontWeight: FontWeight.w600)),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showEditCategoryDialog(category);
+                      },
+                    ),
+                  ),
+                ),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.red.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: ListTile(
+                      leading: Icon(Icons.delete, color: Colors.red),
+                      title: Text('Delete', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w600)),
+                      onTap: () {
+                        Navigator.pop(context);
+                        _showDeleteConfirmation(category);
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildReorderableCard(Category category, int index) {
@@ -379,7 +646,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            '\฿${category.budgetLimit!.toStringAsFixed(0)}',
+                            '฿${category.budgetLimit!.toStringAsFixed(0)}',
                             style: TextStyle(
                               color: Colors.green[700],
                               fontSize: 11,
@@ -484,7 +751,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
-                            '\฿${category.budgetLimit!.toStringAsFixed(0)}',
+                            '฿${category.budgetLimit!.toStringAsFixed(0)}',
                             style: TextStyle(
                               color: Colors.green[700],
                               fontSize: 11,
@@ -764,7 +1031,7 @@ class _CategoryManagerScreenState extends State<CategoryManagerScreen>
                         ),
                         const SizedBox(height: 12),
                         Container(
-                          height: 140,
+                          height: 240,
                           child: GridView.builder(
                             padding: EdgeInsets.all(4),
                             gridDelegate:

@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 import 'package:flowtrack/data/models/transaction.dart';
 import 'package:flowtrack/data/utlity.dart';
-import 'package:flowtrack/providers/user_provider.dart';
 
 class Home extends StatefulWidget {
   final Function(int)? onNavigateToWallet;
@@ -305,7 +304,7 @@ class _HomeState extends State<Home> {
 
     return Container(
       width: double.infinity,
-      height: 180,
+      height: 160,
       decoration: BoxDecoration(
         gradient: themeProvider.primaryGradient,
         borderRadius: BorderRadius.only(
@@ -396,7 +395,7 @@ class _HomeState extends State<Home> {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Transform.translate(
-      offset: Offset(0, -60),
+      offset: Offset(0, 0),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Container(
@@ -441,10 +440,10 @@ class _HomeState extends State<Home> {
                 child: Text('\฿ ${total().toStringAsFixed(2)}',
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 28,
+                        fontSize: 24,
                         color: Colors.white)),
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -475,15 +474,6 @@ class _HomeState extends State<Home> {
                         Container(
                           padding:
                               EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.green.shade400,
-                                Colors.green.shade600
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
                           child: Text('\฿ ${income().toStringAsFixed(2)}',
                               style: TextStyle(
                                   fontWeight: FontWeight.w600,
@@ -525,15 +515,6 @@ class _HomeState extends State<Home> {
                         Container(
                           padding:
                               EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.red.shade400,
-                                Colors.red.shade600
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
                           child: Text(
                               '\฿ ${expenses().abs().toStringAsFixed(2)}',
                               style: TextStyle(
@@ -548,7 +529,7 @@ class _HomeState extends State<Home> {
               ),
 
               // Goal Section
-              SizedBox(height: 20),
+              SizedBox(height: 15),
               Container(
                 padding: EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -561,17 +542,17 @@ class _HomeState extends State<Home> {
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.flag, color: Colors.white, size: 18),
+                        Icon(Icons.flag, color: Colors.white, size: 16),
                         SizedBox(width: 8),
                         Text(
                           'My Goal',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                             color: Colors.white,
                           ),
                         ),
-                        Spacer(),
+                        SizedBox(width: 4),
                         IconButton(
                           icon: Icon(Icons.edit, size: 16, color: Colors.white),
                           onPressed: () => _showGoalDialog(),
@@ -580,7 +561,7 @@ class _HomeState extends State<Home> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: 4),
                     Text(
                       currentGoal.isEmpty
                           ? 'Tap edit to set your goal'
@@ -752,7 +733,7 @@ class _HomeState extends State<Home> {
                         child: Text(
                           '\฿${summary['income']!.toStringAsFixed(0)}',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w500,
                             fontSize: 14,
                             color: Colors.white,
                           ),
@@ -864,7 +845,7 @@ class _HomeState extends State<Home> {
                         child: Text(
                           '${summary['net']! >= 0 ? '+' : ''}\฿${summary['net']!.toStringAsFixed(0)}',
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w500,
                             fontSize: 14,
                             color: Colors.white,
                           ),

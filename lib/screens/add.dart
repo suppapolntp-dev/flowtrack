@@ -142,7 +142,7 @@ class _Add_ScreenState extends State<Add_Screen> {
                       decoration: InputDecoration(
                         labelText: 'Category',
                         labelStyle: TextStyle(color: theme.subtitleColor),
-                        prefixIcon: Icon(Icons.category, color: theme.primaryColor),
+                        // prefixIcon: Icon(Icons.category, color: theme.primaryColor),
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(10),
