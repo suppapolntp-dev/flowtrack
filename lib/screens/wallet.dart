@@ -444,7 +444,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   style: TextStyle(
                     color: isSelected ? Colors.white : themeProvider.textColor,
                     fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                    fontSize: 14,
+                    fontSize: 12,
                   ),
                 ),
               ),
@@ -577,7 +577,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
                 child: Text('\฿${totalSpending.toStringAsFixed(2)}',
                     style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
               ),
@@ -600,7 +600,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
                 child: Text('$totalTransactions',
                     style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
               ),
@@ -623,7 +623,7 @@ class _WalletScreenState extends State<WalletScreen> {
                 ),
                 child: Text('${categorySpendingList.length}',
                     style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
               ),
@@ -732,7 +732,7 @@ class _WalletScreenState extends State<WalletScreen> {
                         children: [
                           Text(category.name,
                               style: TextStyle(
-                                  fontSize: 16,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.w600,
                                   color: themeProvider.textColor)),
                           Container(
@@ -745,7 +745,7 @@ class _WalletScreenState extends State<WalletScreen> {
                             ),
                             child: Text('\฿${categorySpending.totalAmount.toStringAsFixed(2)}',
                                 style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white)),
                           ),
@@ -879,13 +879,13 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                     children: [
                       Text(category.name,
                           style: TextStyle(
-                              fontSize: 20,
+                              fontSize: 14,
                               fontWeight: FontWeight.bold,
                               color: themeProvider.textColor)),
                       Text('$period Period',
                           style: TextStyle(
                               color: themeProvider.subtitleColor,
-                              fontSize: 14)),
+                              fontSize: 12)),
                     ],
                   ),
                 ),
@@ -902,7 +902,7 @@ class CategoryDetailsBottomSheet extends StatelessWidget {
                       ),
                       child: Text('\฿${categorySpending.totalAmount.toStringAsFixed(2)}',
                           style: TextStyle(
-                              fontSize: 16,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                               color: Colors.white)),
                     ),

@@ -734,7 +734,7 @@ class _HomeState extends State<Home> {
                           '\฿${summary['income']!.toStringAsFixed(0)}',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
-                            fontSize: 14,
+                            fontSize: 12,
                             color: Colors.white,
                           ),
                         ),
@@ -846,7 +846,7 @@ class _HomeState extends State<Home> {
                           '${summary['net']! >= 0 ? '+' : ''}\฿${summary['net']!.toStringAsFixed(0)}',
                           style: TextStyle(
                             fontWeight: FontWeight.w500,
-                            fontSize: 14,
+                            fontSize: 12,
                             color: Colors.white,
                           ),
                         ),
@@ -1102,7 +1102,7 @@ class _HomeState extends State<Home> {
                                     Text(
                                       transaction.description,
                                       style: TextStyle(
-                                        fontSize: 13,
+                                        fontSize: 12,
                                         fontWeight: FontWeight.w600,
                                         color: themeProvider.textColor,
                                       ),

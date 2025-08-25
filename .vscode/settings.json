@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "D:/DevProject/Project/first/flowtrack/linux"
+    "cmake.sourceDirectory": "D:/DevProject/Project/first/flowtrack/linux",
+    "java.configuration.updateBuildConfiguration": "automatic"
 }

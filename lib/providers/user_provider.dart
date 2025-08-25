@@ -4,11 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProvider with ChangeNotifier {
   String _userName = 'Mr.Suppapol Tabudda';
-  String _userEmail = 'user@email.com';
   String _userPhone = '';
 
   String get userName => _userName;
-  String get userEmail => _userEmail;
   String get userPhone => _userPhone;
 
   // โหลดข้อมูล user เมื่อเริ่มต้น
@@ -16,7 +14,6 @@ class UserProvider with ChangeNotifier {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       _userName = prefs.getString('user_name') ?? 'Mr.Suppapol Tabudda';
-      _userEmail = prefs.getString('user_email') ?? 'user@email.com';
       _userPhone = prefs.getString('user_phone') ?? '';
       notifyListeners();
     } catch (e) {
@@ -33,11 +30,9 @@ class UserProvider with ChangeNotifier {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_name', name);
-      await prefs.setString('user_email', email);
       await prefs.setString('user_phone', phone);
 
       _userName = name;
-      _userEmail = email;
       _userPhone = phone;
       
       notifyListeners();
@@ -52,11 +47,9 @@ class UserProvider with ChangeNotifier {
     try {
       SharedPreferences prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_name');
-      await prefs.remove('user_email');
       await prefs.remove('user_phone');
 
       _userName = 'Mr.Suppapol Tabudda';
-      _userEmail = 'user@email.com';
       _userPhone = '';
       
       notifyListeners();

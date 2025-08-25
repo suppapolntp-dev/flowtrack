@@ -196,7 +196,7 @@ class _StatisticsState extends State<Statistics> {
                                     fontWeight: isSelected
                                         ? FontWeight.bold
                                         : FontWeight.normal,
-                                    fontSize: 14,
+                                    fontSize: 12,
                                   ),
                                 ),
                                 trailing: isSelected
@@ -305,7 +305,7 @@ class _StatisticsState extends State<Statistics> {
             children: [
               Text('Income',
                   style: TextStyle(
-                      color: themeProvider.subtitleColor, fontSize: 10)),
+                      color: themeProvider.subtitleColor, fontSize: 12)),
               SizedBox(height: 4),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -317,7 +317,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 child: Text('\฿${totalIncome.toStringAsFixed(2)}',
                     style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
               ),
@@ -328,7 +328,7 @@ class _StatisticsState extends State<Statistics> {
             children: [
               Text('Expense',
                   style: TextStyle(
-                      color: themeProvider.subtitleColor, fontSize: 10)),
+                      color: themeProvider.subtitleColor, fontSize: 12)),
               SizedBox(height: 4),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -340,7 +340,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 child: Text('\฿${totalExpense.toStringAsFixed(2)}',
                     style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
               ),
@@ -351,7 +351,7 @@ class _StatisticsState extends State<Statistics> {
             children: [
               Text('Net Amount',
                   style: TextStyle(
-                      color: themeProvider.subtitleColor, fontSize: 10)),
+                      color: themeProvider.subtitleColor, fontSize: 12)),
               SizedBox(height: 4),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -363,7 +363,7 @@ class _StatisticsState extends State<Statistics> {
                 ),
                 child: Text('${netAmount >= 0 ? '+' : ''}\฿${netAmount.toStringAsFixed(2)}',
                     style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
                         color: Colors.white)),
               ),
@@ -374,7 +374,7 @@ class _StatisticsState extends State<Statistics> {
             children: [
               Text('Transactions',
                   style: TextStyle(
-                      color: themeProvider.subtitleColor, fontSize: 10)),
+                      color: themeProvider.subtitleColor, fontSize: 12)),
               SizedBox(height: 4),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -524,7 +524,7 @@ class _StatisticsState extends State<Statistics> {
                               color: index_color == index
                                   ? Colors.white
                                   : themeProvider.textColor,
-                              fontSize: 14,
+                              fontSize: 12,
                               fontWeight: index_color == index
                                   ? FontWeight.w600
                                   : FontWeight.w500,

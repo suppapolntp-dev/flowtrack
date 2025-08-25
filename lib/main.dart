@@ -1,11 +1,11 @@
 // lib/main.dart - Fixed Version with No Errors
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:flowtrack/widgets/bottomnavigationbar.dart';
 import 'package:flowtrack/data/services/database_services.dart';
 import 'package:flowtrack/data/migration_helper.dart';
 import 'package:flowtrack/screens/theme_settings.dart'; // Gradient ThemeProvider
 import 'package:flowtrack/providers/user_provider.dart';
+import 'package:flowtrack/screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +42,7 @@ class FlowTrackApp extends StatelessWidget {
           darkTheme: _buildTheme(themeProvider, true),
           themeMode:
               themeProvider.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-          home: Bottom(),
+          home: SplashScreen(), // เปลี่ยนจาก Bottom() เป็น SplashScreen()
         );
       },
     );
